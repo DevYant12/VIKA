@@ -1,0 +1,10 @@
+{
+  "name": "vika",
+  "version": "1.0.0",
+  "description": "Vika: agenda de citas para las clínicas de la Dra. Paredes",
+  "scripts": {
+    "start": "node server.js",
+    "backup": "node -e \"require('fs').copyFileSync('vika.db','backup-'+Date.now()+'.db')\""
+  },
+  "engines": { "node": ">=22.5" }
+}
