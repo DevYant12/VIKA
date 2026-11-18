@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vika · Agenda de citas</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="offline" hidden role="alert">Sin conexión con el sistema. Lo que escriba no se guardará hasta que vuelva el internet.</div>
+  <header>
+    <h1>Vika</h1>
+    <div id="sesion" hidden><span id="usuario"></span> <button id="mipin">Mi PIN</button> <button id="salir">Salir</button></div>
+  </header>
+  <nav hidden>
+    <button data-v="agendar" class="on">Agendar cita</button>
+    <button data-v="citas">Citas del día</button>
+    <button data-v="pacientes">Nuevo paciente</button>
+    <button data-v="equipo" hidden>Equipo</button>
+  </nav>
+  <main id="vista"></main>
+  <div id="aviso" role="status" aria-live="polite"></div>
+  <script src="js/app.js"></script>
+</body>
+</html>

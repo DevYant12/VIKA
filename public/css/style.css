@@ -1,0 +1,39 @@
+:root{--fondo:#f3f7f6;--tarjeta:#fff;--texto:#16302e;--suave:#5c716f;--marca:#0b6e6a;--marca2:#e6f3f2;--error:#b3261e;--ok:#1b6b3a;--borde:#c9d9d7}
+@media(prefers-color-scheme:dark){:root{--fondo:#0f1b1a;--tarjeta:#172625;--texto:#e8f2f1;--suave:#a3b8b6;--marca:#4fc3bc;--marca2:#1d3533;--error:#ff8a80;--ok:#7fdc9b;--borde:#2f4846}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--texto);font:18px/1.5 "Segoe UI",system-ui,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;background:var(--marca);color:#fff}
+h1{margin:0;font:700 2rem Georgia,serif;letter-spacing:.5px}
+.quien{font-size:1rem}.quien input{width:11rem;margin-left:6px}
+nav{display:flex;gap:8px;padding:12px 20px;flex-wrap:wrap}
+nav button{flex:1;min-width:9rem;background:var(--tarjeta);color:var(--texto);border:2px solid var(--borde)}
+nav button.on{background:var(--marca);color:#fff;border-color:var(--marca)}
+main{max-width:760px;margin:0 auto;padding:8px 20px 80px}
+section{background:var(--tarjeta);border:1px solid var(--borde);border-radius:12px;padding:18px;margin-bottom:16px}
+h2{margin:0 0 12px;font-size:1.25rem}
+label{display:block;margin:12px 0 4px;font-weight:600}
+input,select,button{font:inherit;padding:12px 14px;border-radius:8px;border:2px solid var(--borde);background:var(--tarjeta);color:var(--texto);min-height:48px}
+input,select{width:100%}
+button{cursor:pointer;background:var(--marca);color:#fff;border-color:var(--marca);font-weight:600}
+button.sec{background:transparent;color:var(--marca)}
+button.peligro{background:transparent;color:var(--error);border-color:var(--error)}
+button:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:3px solid #f2b300;outline-offset:2px}
+.horas{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-top:8px}
+.horas button{background:var(--tarjeta);color:var(--texto);border-color:var(--borde)}
+.horas button.sel{background:var(--marca);color:#fff;border-color:var(--marca)}
+.horas button:disabled{text-decoration:line-through}
+.err{color:var(--error);font-size:.95rem;margin-top:4px}
+.fila{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--borde);flex-wrap:wrap}
+.cancelada{opacity:.55;text-decoration:line-through}
+.res{padding:10px;border:2px solid var(--borde);border-radius:8px;margin-top:6px;cursor:pointer}
+.res.sel{border-color:var(--marca);background:var(--marca2)}
+.suave{color:var(--suave)}
+#offline{background:var(--error);color:#fff;padding:10px 20px;text-align:center;font-weight:600}
+#aviso{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);max-width:92vw;padding:14px 20px;border-radius:10px;background:var(--texto);color:var(--fondo);font-weight:600;display:none}
+#aviso.ver{display:block}
+@media(prefers-reduced-motion:no-preference){button{transition:background .15s}}
+[hidden]{display:none!important}
+#sesion{display:flex;align-items:center;gap:10px;font-size:1rem}
+#sesion button{background:transparent;color:#fff;border-color:#fff;min-height:40px;padding:6px 14px}
+.codigo{font:700 1.9rem ui-monospace,Consolas,monospace;letter-spacing:3px;margin:6px 0}
