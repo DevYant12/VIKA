@@ -21,10 +21,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_medico_hora ON citas(medico_id, inicio) WHE
 CREATE TABLE IF NOT EXISTS auditoria(id INTEGER PRIMARY KEY, cuando TEXT DEFAULT CURRENT_TIMESTAMP, quien TEXT, accion TEXT, detalle TEXT);
 CREATE TABLE IF NOT EXISTS usuarios(id INTEGER PRIMARY KEY, nombre TEXT NOT NULL, rol TEXT NOT NULL CHECK(rol IN ('doctora','recepcion')), activo INTEGER NOT NULL DEFAULT 1, pin_hash TEXT, intentos INTEGER NOT NULL DEFAULT 0, bloqueado_hasta INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS sesiones(token TEXT PRIMARY KEY, usuario_id INTEGER NOT NULL REFERENCES usuarios(id), expira INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS cuentas(id INTEGER PRIMARY KEY, paciente_id INTEGER NOT NULL UNIQUE REFERENCES pacientes(id), pin_hash TEXT NOT NULL, intentos INTEGER NOT NULL DEFAULT 0, bloqueado_hasta INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS sesiones_pac(token TEXT PRIMARY KEY, cuenta_id INTEGER NOT NULL REFERENCES cuentas(id), expira INTEGER NOT NULL);
 `);
 // Migración: bases creadas con la versión anterior
 for (const c of ['pin_hash TEXT', 'intentos INTEGER NOT NULL DEFAULT 0', 'bloqueado_hasta INTEGER NOT NULL DEFAULT 0'])
   try { db.exec('ALTER TABLE usuarios ADD COLUMN ' + c); } catch {}
+for (const c of ["anticipo TEXT NOT NULL DEFAULT 'no_aplica'", 'anticipo_monto REAL NOT NULL DEFAULT 0', 'terminos_version TEXT', 'terminos_en TEXT', 'pago_ref TEXT'])
+  try { db.exec('ALTER TABLE citas ADD COLUMN ' + c); } catch {}
 
 if (db.prepare('SELECT COUNT(*) n FROM clinicas').get().n === 0) {
   for (const c of ['Clínica Centro', 'Clínica Norte', 'Clínica Sur']) db.prepare('INSERT INTO clinicas(nombre) VALUES(?)').run(c);

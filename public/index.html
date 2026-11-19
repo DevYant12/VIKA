@@ -3,17 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b8f9c">
   <title>Vika · Agenda de citas</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div id="offline" hidden role="alert">Sin conexión con el sistema. Lo que escriba no se guardará hasta que vuelva el internet.</div>
   <header>
-    <h1>Vika</h1>
-    <div id="sesion" hidden><span id="usuario"></span> <button id="mipin">Mi PIN</button> <button id="salir">Salir</button></div>
+    <div class="marca">
+      <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z"/></svg></span>
+      <h1>Vika</h1>
+    </div>
+    <div id="sesion" hidden><span id="usuario"></span><button id="mipin" class="sec">Mi PIN</button><button id="salir" class="sec">Salir</button></div>
   </header>
   <nav hidden>
-    <button data-v="agendar" class="on">Agendar cita</button>
+    <span class="pill"></span>
+    <button data-v="agendar" class="on">Agendar</button>
+    <button data-v="mis" hidden>Mis citas</button>
     <button data-v="citas">Citas del día</button>
     <button data-v="pacientes">Nuevo paciente</button>
     <button data-v="equipo" hidden>Equipo</button>
