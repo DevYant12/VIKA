@@ -57,6 +57,7 @@ async function api(req, res, url) {
     const b = await leer(req); if (!b) return send(res, 400, { error: 'Datos ilegibles.' });
     const esPac = u.rol === 'paciente';
     if (esPac) { if (b.acepta_terminos !== true) return send(res, 400, { error: 'Debe aceptar los términos y condiciones para agendar.' }); b.paciente_id = u.paciente_id; }
+    for (const k of ['paciente_id', 'medico_id', 'clinica_id']) b[k] = Number.isInteger(Number(b[k])) && b[k] !== null && b[k] !== '' ? Number(b[k]) : 0;
     const c = db.prepare('SELECT * FROM clinicas WHERE id=?').get(b.clinica_id);
     if (!c || !db.prepare('SELECT 1 FROM medicos WHERE id=?').get(b.medico_id) || !db.prepare('SELECT 1 FROM pacientes WHERE id=?').get(b.paciente_id))
       return send(res, 400, { error: 'Falta elegir clínica, médico o paciente.' });
@@ -69,8 +70,15 @@ async function api(req, res, url) {
       audit(u.nombre, 'crear_cita', { id: Number(r.lastInsertRowid), ...b });
       return send(res, 201, { id: Number(r.lastInsertRowid), anticipo: esPac ? 'pendiente' : 'no_aplica', monto: esPac ? Ant.ANTICIPO : 0, minutos_para_pagar: Ant.MINUTOS_PAGO });
     } catch (err) {
-      if (String(err.message).includes('UNIQUE')) return send(res, 409, { error: 'Esa hora acaba de ser ocupada por otra persona. Elija otra hora.' });
-      throw err;
+      if (!String(err.message).includes('UNIQUE')) throw err;
+      const ya = db.prepare("SELECT id,paciente_id,clinica_id,anticipo,anticipo_monto FROM citas WHERE medico_id=? AND inicio=? AND estado='agendada'").get(b.medico_id, b.inicio);
+      // Doble clic o reintento: la cita ya es de este mismo paciente y clínica, así que se devuelve la misma en vez de un falso "ocupada"
+      if (ya && ya.paciente_id === b.paciente_id && ya.clinica_id === b.clinica_id)
+        return send(res, 200, { id: ya.id, anticipo: ya.anticipo, monto: ya.anticipo_monto, minutos_para_pagar: Ant.MINUTOS_PAGO, repetida: true });
+      audit(u.nombre, 'conflicto_cita', { medico_id: b.medico_id, clinica_id: b.clinica_id, inicio: b.inicio, paciente_id: b.paciente_id, cita_existente: ya ? ya.id : null });
+      if (ya && ya.anticipo === 'pendiente')
+        return send(res, 409, { error: `Esa hora está apartada por un paciente que aún no paga el anticipo. Si no paga en ${Ant.MINUTOS_PAGO} minutos se libera sola. Elija otra hora o intente más tarde.` });
+      return send(res, 409, { error: 'Esa hora acaba de ser ocupada por otra persona. Elija otra hora.' });
     }
   }
   const m = p.match(/^citas\/(\d+)\/cancelar$/);

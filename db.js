@@ -3,7 +3,7 @@ const { DatabaseSync } = require('node:sqlite');
 const db = new DatabaseSync(process.env.VIKA_DB || 'vika.db');
 
 db.exec(`
-PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;
+PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;
 CREATE TABLE IF NOT EXISTS clinicas(id INTEGER PRIMARY KEY, nombre TEXT UNIQUE NOT NULL, abre TEXT NOT NULL DEFAULT '08:00', cierra TEXT NOT NULL DEFAULT '17:00');
 CREATE TABLE IF NOT EXISTS medicos(id INTEGER PRIMARY KEY, nombre TEXT NOT NULL, especialidad TEXT);
 CREATE TABLE IF NOT EXISTS pacientes(
