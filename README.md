@@ -12,3 +12,9 @@ Al arrancar, la terminal muestra el **PIN inicial** de la Dra. Paredes. Abra htt
 ## Estructura
 - `server.js` API y servidor · `db.js` base de datos SQLite · `validators.js` validaciones · `auth.js` acceso con PIN y roles
 - `public/` interfaz (HTML, CSS, JS) · `DECISIONES.md` decisiones del equipo
+
+## Pruebas
+`npm test` corre las pruebas automáticas (validaciones, base de datos, PIN, copias de seguridad y toda la API).
+
+## Pacientes y anticipo
+Los pacientes crean su cuenta, aceptan los términos y pagan un anticipo (pago **simulado**). Se configura con variables: `VIKA_ANTICIPO` (dólares, 5 por defecto), `VIKA_MINUTOS_PAGO` (15) y `VIKA_HORAS_REEMBOLSO` (0 = nunca se devuelve).
