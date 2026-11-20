@@ -17,11 +17,22 @@ function mostrarEstadoRed() {
   o.textContent = yo && yo.rol !== 'paciente' ? 'Sin conexión con el sistema. Puede seguir agendando: las citas quedan SIN CONFIRMAR y se envían solas cuando vuelva el internet.' : 'Sin conexión con el sistema. Lo que escriba no se guardará hasta que vuelva el internet.';
 }
 
+let solicitudesActivas = 0;
+function mostrarProgreso(delta) {
+  solicitudesActivas = Math.max(0, solicitudesActivas + delta);
+  const barra = $('#progreso');
+  if (!barra) return;
+  barra.hidden = solicitudesActivas === 0;
+  barra.setAttribute('aria-label', solicitudesActivas ? 'Vika está comprobando la información' : 'Listo');
+}
+
 async function api(url, cuerpo) {
+  mostrarProgreso(1);
   try {
     const r = await fetch('/api/' + url, cuerpo ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) } : undefined);
     const j = await r.json(); enLinea = true; mostrarEstadoRed(); if (r.status === 401 && yo) { yo = null; login(); } if (Array.isArray(j)) return Object.assign(j, { ok: r.ok, status: r.status }); return { ...j, ok: r.ok, status: r.status };
   } catch { enLinea = false; mostrarEstadoRed(); return { ok: false, sinRed: true, error: 'No hay conexión. No se guardó nada; intente de nuevo cuando vuelva el internet.' }; }
+  finally { mostrarProgreso(-1); }
 }
 let t; function aviso(txt) { const a = $('#aviso'); a.textContent = txt; a.classList.add('ver'); clearTimeout(t); t = setTimeout(() => a.classList.remove('ver'), 5000); }
 const hoy = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
