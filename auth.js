@@ -4,6 +4,9 @@ const SESION = 8 * 36e5, MAX_INTENTOS = 5, BLOQUEO = 5 * 6e4;
 const nuevoToken = () => crypto.randomBytes(32).toString('base64url');
 const audit = (q, a, d) => db.prepare('INSERT INTO auditoria(quien,accion,detalle) VALUES(?,?,?)').run(q, a, JSON.stringify(d || {}));
 
+const esHttps = req => !!(req.socket && req.socket.encrypted) || req.headers['x-forwarded-proto'] === 'https' || process.env.VIKA_HTTPS === '1';
+const galleta = (req, tok) => `vika=${tok}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESION / 1000}${esHttps(req) ? '; Secure' : ''}`;
+
 const pinFacil = p => /^(\d)\1{5}$/.test(p) || '0123456789012345'.includes(p) || '9876543210987654'.includes(p);
 const pinValido = p => /^\d{6}$/.test(p) && !pinFacil(p);
 const MSG_PIN = 'El PIN debe tener 6 números y no ser fácil de adivinar (como 123456 o 111111).';
@@ -29,7 +32,7 @@ function arranque() {
 
 function abrirSesionPaciente(req, res, cuentaId) {
   const tok = nuevoToken(); db.prepare('INSERT INTO sesiones_pac VALUES(?,?,?)').run(tok, cuentaId, Date.now() + SESION);
-  res.setHeader('Set-Cookie', `vika=${tok}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESION / 1000}${req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : ''}`);
+  res.setHeader('Set-Cookie', galleta(req, tok));
 }
 
 async function rutas(req, res, url, p, M, leer, send) {
@@ -50,7 +53,7 @@ async function rutas(req, res, url, p, M, leer, send) {
     }
     db.prepare('UPDATE usuarios SET intentos=0 WHERE id=?').run(u.id);
     const tok = nuevoToken(); db.prepare('INSERT INTO sesiones VALUES(?,?,?)').run(tok, u.id, Date.now() + SESION); audit(u.nombre, 'entrar');
-    res.setHeader('Set-Cookie', `vika=${tok}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESION / 1000}${req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : ''}`);
+    res.setHeader('Set-Cookie', galleta(req, tok));
     send(res, 200, { nombre: u.nombre, rol: u.rol }); return true;
   }
   if (p === 'auth/paciente/registro') {
@@ -78,17 +81,36 @@ async function rutas(req, res, url, p, M, leer, send) {
   }
   if (p === 'auth/salir') {
     const m = /vika=([\w-]+)/.exec(req.headers.cookie || ''); if (m) { db.prepare('DELETE FROM sesiones WHERE token=?').run(m[1]); db.prepare('DELETE FROM sesiones_pac WHERE token=?').run(m[1]); }
-    res.setHeader('Set-Cookie', 'vika=; Max-Age=0; Path=/'); send(res, 200, { ok: true }); return true;
+    res.setHeader('Set-Cookie', 'vika=; HttpOnly; SameSite=Strict; Max-Age=0; Path=/' + (esHttps(req) ? '; Secure' : '')); send(res, 200, { ok: true }); return true;
   }
   if (p === 'auth/pin') {
     const u = usuarioDe(req); if (!u) { send(res, 401, { error: 'Inicie sesión.' }); return true; }
-    if (u.rol === 'paciente') { send(res, 400, { error: 'El PIN de paciente lo cambia recepción por ahora.' }); return true; }
-    const fila = db.prepare('SELECT pin_hash FROM usuarios WHERE id=?').get(u.id);
-    if (!coincide(String(b.actual || ''), fila.pin_hash)) { send(res, 400, { error: 'El PIN actual no es correcto.' }); return true; }
+    const pac = u.rol === 'paciente', tabla = pac ? 'cuentas' : 'usuarios';
+    const fila = pac ? db.prepare('SELECT id,pin_hash,intentos,bloqueado_hasta FROM cuentas WHERE paciente_id=?').get(u.paciente_id)
+      : db.prepare('SELECT id,pin_hash,intentos,bloqueado_hasta FROM usuarios WHERE id=?').get(u.id);
+    if (!fila) { send(res, 400, { error: 'No se encontró su cuenta.' }); return true; }
+    if (fila.bloqueado_hasta > Date.now()) { send(res, 429, { error: `Demasiados intentos. Espere ${Math.ceil((fila.bloqueado_hasta - Date.now()) / 6e4)} minuto(s).` }); return true; }
+    if (!coincide(String(b.actual || ''), fila.pin_hash)) {          // también aquí se limitan los intentos: una sesión ajena no puede adivinar el PIN
+      const n = fila.intentos + 1;
+      if (n >= MAX_INTENTOS) { db.prepare(`UPDATE ${tabla} SET intentos=0, bloqueado_hasta=? WHERE id=?`).run(Date.now() + BLOQUEO, fila.id); audit(u.nombre, 'bloqueo_por_intentos', { al_cambiar_pin: true }); send(res, 429, { error: 'PIN incorrecto demasiadas veces. Espere 5 minutos.' }); }
+      else { db.prepare(`UPDATE ${tabla} SET intentos=? WHERE id=?`).run(n, fila.id); send(res, 400, { error: `El PIN actual no es correcto. Le quedan ${MAX_INTENTOS - n} intento(s).` }); }
+      return true;
+    }
     if (!pinValido(String(b.nuevo || ''))) { send(res, 422, { error: MSG_PIN }); return true; }
-    ponerPin(u.id, String(b.nuevo)); audit(u.nombre, 'cambiar_pin'); send(res, 200, { ok: true }); return true;
+    const tok = (/(?:^|;\s*)vika=([\w-]+)/.exec(req.headers.cookie || '') || [])[1];
+    if (pac) { db.prepare('UPDATE cuentas SET pin_hash=?, intentos=0, bloqueado_hasta=0 WHERE id=?').run(hash(String(b.nuevo)), fila.id); db.prepare('DELETE FROM sesiones_pac WHERE cuenta_id=? AND token<>?').run(fila.id, tok || ''); }
+    else { ponerPin(u.id, String(b.nuevo)); db.prepare('DELETE FROM sesiones WHERE usuario_id=? AND token<>?').run(u.id, tok || ''); }
+    audit(u.nombre, pac ? 'cambiar_pin_paciente' : 'cambiar_pin'); send(res, 200, { ok: true }); return true;
   }
   return false;
+}
+
+// Personal: da acceso a un paciente ya registrado, o le genera un PIN nuevo si lo olvidó. Devuelve el PIN una sola vez.
+function darAccesoPaciente(pacienteId) {
+  let pin; do { pin = String(crypto.randomInt(0, 1e6)).padStart(6, '0'); } while (!pinValido(pin));
+  const c = db.prepare('SELECT id FROM cuentas WHERE paciente_id=?').get(pacienteId);
+  if (c) { db.prepare('UPDATE cuentas SET pin_hash=?, intentos=0, bloqueado_hasta=0 WHERE id=?').run(hash(pin), c.id); db.prepare('DELETE FROM sesiones_pac WHERE cuenta_id=?').run(c.id); return { pin, nuevo: false }; }
+  db.prepare('INSERT INTO cuentas(paciente_id,pin_hash) VALUES(?,?)').run(pacienteId, hash(pin)); return { pin, nuevo: true };
 }
 
 // Solo doctora: gestionar equipo y ver historial
@@ -108,4 +130,4 @@ async function admin(req, res, url, p, M, leer, send, u) {
   db.prepare('UPDATE usuarios SET activo=0 WHERE id=?').run(m[1]); db.prepare('DELETE FROM sesiones WHERE usuario_id=?').run(m[1]);
   audit(u.nombre, 'desactivar_usuario', { id: +m[1] }); send(res, 200, { ok: true }); return true;
 }
-module.exports = { arranque, rutas, admin, usuarioDe, pinValido, hash, coincide };
+module.exports = { arranque, rutas, admin, usuarioDe, pinValido, hash, coincide, darAccesoPaciente, esHttps };
