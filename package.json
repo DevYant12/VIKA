@@ -5,7 +5,11 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test \"tests/*.test.js\"",
-    "backup": "node -e \"require('fs').copyFileSync('vika.db','backup-'+Date.now()+'.db')\""
+    "backup": "node -e \"require('fs').copyFileSync('vika.db','backup-'+Date.now()+'.db')\"",
+    "restaurar": "node restaurar.js",
+    "test:ui": "node tests-ui/humo.js"
   },
-  "engines": { "node": ">=22.5" }
+  "engines": {
+    "node": ">=22.5"
+  }
 }
