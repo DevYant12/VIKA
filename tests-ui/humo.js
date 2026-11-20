@@ -34,7 +34,8 @@ async function main() {
   await esperar(() => qa(w, '#vista button').some(b => /Paredes/.test(b.textContent)), 8000, 'pantalla de acceso'); paso('carga la pantalla de acceso');
   clic(w, qa(w, '#vista button').find(b => /Paredes/.test(b.textContent)));
   const pin = await esperar(() => q(w, '#vista input[type=password]'), 3000, 'campo PIN'); pin.value = PIN; clic(w, qa(w, '#vista button').find(b => b.textContent === 'Entrar'));
-  await esperar(() => !q(w, 'nav').hidden && qa(w, '.hora').length, 8000, 'agenda tras entrar'); paso('entra con PIN y carga las horas');
+  await esperar(() => !q(w, 'nav').hidden && /¿Qué desea hacer/.test(vista(w)), 8000, 'inicio tras entrar'); paso('entra con PIN y muestra las acciones principales');
+  nav(w, 'agendar'); await esperar(() => qa(w, '.hora').length, 8000, 'agenda tras entrar'); paso('abre Agendar cita y carga las horas');
   assert.equal(q(w, 'nav [data-v=ajustes]').hidden, false); assert.equal(q(w, 'nav [data-v=pend]').hidden, true); assert.equal(q(w, '#mipin').hidden, false); paso('doctora ve Ajustes; "Sin confirmar" oculto mientras no hay nada');
   await esperar(() => w.localStorage.getItem('vika_agenda'), 5000, 'agenda guardada para trabajar sin internet'); assert.ok(w.localStorage.getItem('vika_cat') && w.localStorage.getItem('vika_yo')); paso('guarda catálogo, identidad y agenda para trabajar sin internet');
   await esperar(() => /Ajustes ⚠/.test(q(w, 'nav [data-v=ajustes]').textContent), 3000, 'aviso de copia externa'); paso('avisa a la doctora que no hay copia externa');

@@ -32,10 +32,16 @@ const SINONIMOS = {
   dias: ['dias', 'dia'],
   abre: ['abre', 'desde', 'entrada', 'inicio', 'horainicio'],
   cierra: ['cierra', 'hasta', 'salida', 'fin', 'horafin'],
+  fecha: ['fecha', 'fechacita', 'fechadelacita'],
+  hora: ['hora', 'horacita', 'horadelacita'],
+  estado: ['estado', 'situacion'],
 };
-function leerTabla(texto) {
+// En el archivo de citas pasadas hay dos nombres por fila (paciente y médico): se leen aparte
+const COL_CITAS = { paciente: ['paciente', 'nombrepaciente', 'nombre', 'nombres'], medico: ['medico', 'doctor', 'doctora', 'nombremedico'] };
+function leerTabla(texto, tipo) {
   const f = csv(texto); if (f.length < 2) return { error: 'El archivo está vacío o solo tiene los títulos. Debe tener una fila por cada registro.' };
   const col = {}; f[0].forEach((t, i) => { for (const [k, s] of Object.entries(SINONIMOS)) if (s.includes(clave(t)) && !(k in col)) col[k] = i; });
+  if (tipo === 'citas') { delete col.nombre; f[0].forEach((t, i) => { for (const [k, s] of Object.entries(COL_CITAS)) if (s.includes(clave(t)) && !(k in col)) col[k] = i; }); }
   const filas = f.slice(1).map((r, i) => ({ linea: i + 2, v: Object.fromEntries(Object.entries(col).map(([k, i2]) => [k, String(r[i2] ?? '').trim()])) }));
   if (filas.length > MAX_FILAS) return { error: `El archivo tiene ${filas.length} filas; el máximo es ${MAX_FILAS}. Divídalo en partes.` };
   return { col, filas };
@@ -43,6 +49,7 @@ function leerTabla(texto) {
 const aIso = s => { s = String(s || '').trim(); if (!s) return ''; let m;
   if ((m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/.exec(s))) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
   return s; };
+const fechaReal = f => /^\d{4}-\d{2}-\d{2}$/.test(f) && !isNaN(new Date(f + 'T12:00:00')) && new Date(f + 'T12:00:00Z').toISOString().slice(0, 10) === f;   // rechaza 31/02
 const aHora = s => { const m = /^(\d{1,2})(?::|h|\.)?(\d{2})?$/.exec(String(s || '').trim()); return m ? String(m[1]).padStart(2, '0') + ':' + (m[2] || '00') : String(s || '').trim(); };
 
 function filaPaciente(v) {
@@ -57,8 +64,8 @@ function filaPaciente(v) {
 function textoErrores(e) { return Object.values(e).join(' '); }
 
 function ejecutar(tipo, texto, { simular = true, duplicados = false, quien = 'importación' } = {}) {
-  const t = leerTabla(texto); if (t.error) return { status: 422, body: { error: t.error } };
-  const faltan = { pacientes: ['nombre'], medicos: ['nombre'], horarios: ['nombre', 'clinica', 'dias', 'abre', 'cierra'] }[tipo];
+  const t = leerTabla(texto, tipo); if (t.error) return { status: 422, body: { error: t.error } };
+  const faltan = { pacientes: ['nombre'], medicos: ['nombre'], horarios: ['nombre', 'clinica', 'dias', 'abre', 'cierra'], citas: ['paciente', 'medico', 'clinica', 'fecha', 'hora'] }[tipo];
   if (!faltan) return { status: 400, body: { error: 'Elija qué desea importar.' } };
   const sin = faltan.filter(k => !(k in t.col));
   if (sin.length) return { status: 422, body: { error: `Faltan estas columnas en la primera fila: ${sin.join(', ')}.` } };
@@ -82,6 +89,24 @@ function ejecutar(tipo, texto, { simular = true, duplicados = false, quien = 'im
         if (x) { nota(linea, 'ya_existia', 'Ya existe un médico con ese nombre.', nombre); continue; }
         const id = Number(db.prepare('INSERT INTO medicos(nombre,especialidad) VALUES(?,?)').run(nombre, V.limpiar(v.especialidad) || null).lastInsertRowid);
         medicos.push({ id, nombre }); nota(linea, 'creado');
+      } else if (tipo === 'citas') {          // citas pasadas del archivo de la clínica: se guardan como historial, sin exigir que la fecha sea futura
+        const nn = V.normalizar(v.medico), m = medicos.find(x => V.normalizar(x.nombre) === nn) || medicos.find(x => V.normalizar(x.nombre).replace(/^(dr|dra)\.?\s/, '') === nn.replace(/^(dr|dra)\.?\s/, ''));
+        const cn = V.normalizar(v.clinica).replace(/^clinica\s/, ''), c = clinicas.find(x => V.normalizar(x.nombre).replace(/^clinica\s/, '') === cn);
+        const fecha = aIso(v.fecha), hora = aHora(v.hora), cancelada = /cancel/.test(V.normalizar(v.estado));
+        const doc = String(v.documento || '').replace(/[\s.-]/g, ''), pn = V.normalizar(v.paciente);
+        let pacs = doc ? db.prepare('SELECT id FROM pacientes WHERE documento=?').all(doc.length === 9 && /^\d+$/.test(doc) ? '0' + doc : doc.toUpperCase()) : [];
+        if (!pacs.length) pacs = db.prepare('SELECT id FROM pacientes WHERE nombre_norm=?').all(pn);
+        if (!m) nota(linea, 'error', `No hay un médico llamado "${v.medico}". Impórtelo primero.`, v.paciente);
+        else if (!c) nota(linea, 'error', `No existe la clínica "${v.clinica}". Las clínicas son: ${clinicas.map(x => x.nombre).join(', ')}.`, v.paciente);
+        else if (!fechaReal(fecha)) nota(linea, 'error', `La fecha "${v.fecha}" no es válida. Use día/mes/año, por ejemplo 15/03/2026.`, v.paciente);
+        else if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(hora)) nota(linea, 'error', `La hora "${v.hora}" no es válida. Ejemplo: 09:30.`, v.paciente);
+        else if (!pacs.length) nota(linea, 'error', `No encuentro al paciente "${v.paciente}". Importe primero a los pacientes.`, v.paciente);
+        else if (pacs.length > 1) nota(linea, 'parecido', `Hay ${pacs.length} pacientes con el nombre "${v.paciente}". Agregue su cédula en el archivo para saber cuál es.`, v.paciente);
+        else {
+          if (db.prepare('SELECT 1 FROM citas WHERE paciente_id=? AND medico_id=? AND inicio=? AND estado=?').get(pacs[0].id, m.id, fecha + 'T' + hora, cancelada ? 'cancelada' : 'agendada')) { nota(linea, 'ya_existia', 'Esta cita ya estaba registrada.', v.paciente); continue; }   // repetir la importación no duplica
+          try { db.prepare("INSERT INTO citas(paciente_id,medico_id,clinica_id,inicio,estado,creado_por,origen) VALUES(?,?,?,?,?,?,'importada')").run(pacs[0].id, m.id, c.id, fecha + 'T' + hora, cancelada ? 'cancelada' : 'agendada', quien); nota(linea, 'creado'); }
+          catch (e) { if (!String(e.message).includes('UNIQUE')) throw e; nota(linea, 'ya_existia', 'Ese médico ya tiene una cita a esa hora (puede que ya se haya importado).', v.paciente); }
+        }
       } else {
         const nn = V.normalizar(v.nombre), m = medicos.find(x => V.normalizar(x.nombre) === nn) || medicos.find(x => V.normalizar(x.nombre).replace(/^(dr|dra)\.?\s/, '') === nn.replace(/^(dr|dra)\.?\s/, ''));
         const cn = V.normalizar(v.clinica).replace(/^clinica\s/, ''), c = clinicas.find(x => V.normalizar(x.nombre).replace(/^clinica\s/, '') === cn);

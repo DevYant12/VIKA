@@ -15,7 +15,7 @@ async function arrancar(extraEnv = {}, { https: usaHttps = false } = {}) {
   return { puerto, pin: /PIN inicial de [^:]+: (\d{6})/.exec(salida)[1], llamar, dir,
     cerrar() { hijo.kill(); setTimeout(() => { try { fs.rmSync(dir, { recursive: true, force: true }); } catch {} }, 500).unref(); } };
 }
-const fecha = (dias, hora = '10:00') => new Date(Date.now() + dias * 864e5 - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10) + 'T' + hora;
+const fecha = (dias, hora = '10:00') => require('../validators').ahoraLocal(Date.now() + dias * 864e5).slice(0, 10) + 'T' + hora;
 // Cédula ecuatoriana válida (semilla de 7 dígitos → 10 dígitos con su verificador). Prefijo = provincia, ej. '01'.
 const cedula = (semilla, prov = '17') => { const c = prov + '1' + String(semilla).padStart(6, '0').slice(-6); let s = 0;
   for (let i = 0; i < 9; i++) { let v = +c[i] * (i % 2 === 0 ? 2 : 1); if (v > 9) v -= 9; s += v; } return c + ((10 - (s % 10)) % 10); };

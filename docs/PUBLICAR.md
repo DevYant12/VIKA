@@ -2,6 +2,8 @@
 
 Vika guarda datos de salud y PIN. **Nunca debe quedar abierta en la red sin HTTPS.** Por eso, por defecto, solo escucha en el propio computador (`127.0.0.1`). Para que las tres clínicas la usen hay que ponerle HTTPS delante. Dos formas:
 
+> **Estado de esta entrega:** Vika está preparada para un servidor central y acceso simultáneo, pero no está desplegada en Internet desde este proyecto. Antes de usar datos reales, configure un dominio, HTTPS, una copia externa cifrada y pruebe una restauración en otro equipo. No comparta el puerto 3000 directamente.
+
 ## Opción A (recomendada): Caddy como "portero" con HTTPS automático
 Caddy consigue y renueva solo el certificado. Se instala en el mismo computador que Vika y necesita un nombre de dominio (ej. `citas.clinicaparedes.com`) apuntando a ese computador.
 

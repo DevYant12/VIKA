@@ -62,18 +62,20 @@ function seccionMedicos(d) {
 const PLANTILLAS = {
   pacientes: 'Nombre;Cédula;Teléfono;Fecha de nacimiento;Correo\nMaría López;1710034065;0991234567;05/03/1990;maria@correo.com\n',
   medicos: 'Nombre;Especialidad\nDra. Elena Ruiz;Dermatología\n',
+  citas: 'Paciente;Cédula;Médico;Clínica;Fecha;Hora;Estado\nMaría López;1710034065;Dra. Paredes;Centro;15/03/2026;09:30;atendida\n',
   horarios: 'Médico;Clínica;Días;Desde;Hasta\nDra. Elena Ruiz;Norte;lun-vie;08:00;12:30\nDra. Elena Ruiz;Sur;sábado;09:00;13:00\n',
 };
 const AYUDA = {
   pacientes: 'Columnas: Nombre (obligatoria), Cédula o pasaporte, Teléfono, Fecha de nacimiento (día/mes/año) y Correo. Si Excel le borró el cero inicial de una cédula o celular, el sistema lo arregla.',
   medicos: 'Columnas: Nombre (obligatoria) y Especialidad. Los que ya existen se omiten.',
+  citas: 'Citas pasadas (historial). Columnas: Paciente, Médico, Clínica, Fecha (día/mes/año), Hora; opcional Cédula (para distinguir homónimos) y Estado ("cancelada" las deja canceladas). Importe antes a los pacientes y médicos.',
   horarios: 'Columnas: Médico, Clínica, Días (ej.: lun-vie, lun mie vie, sábado), Desde y Hasta (en punto o y media). El médico debe existir antes: impórtelo primero.',
 };
 // Excel guarda "CSV" en Windows-1252 y "CSV UTF-8" en UTF-8: se prueba UTF-8 y, si falla, se usa Windows-1252 para no dañar las tildes
 const leerArchivo = async f => { const b = await f.arrayBuffer(); try { return new TextDecoder('utf-8', { fatal: true }).decode(b); } catch { return new TextDecoder('windows-1252').decode(b); } };
 
 function seccionImportar() {
-  const tipo = h('select', { 'aria-label': 'Qué importar' }, h('option', { value: 'pacientes' }, 'Pacientes'), h('option', { value: 'medicos' }, 'Médicos'), h('option', { value: 'horarios' }, 'Horarios de médicos'));
+  const tipo = h('select', { 'aria-label': 'Qué importar' }, h('option', { value: 'pacientes' }, 'Pacientes'), h('option', { value: 'medicos' }, 'Médicos'), h('option', { value: 'horarios' }, 'Horarios de médicos'), h('option', { value: 'citas' }, 'Citas pasadas'));
   const arch = h('input', { type: 'file', accept: '.csv,.txt', 'aria-label': 'Archivo CSV' }), dup = h('input', { type: 'checkbox' }), ayuda = h('p', { class: 'suave' }), ejemplo = h('pre', { class: 'ejemplo' });
   const res = h('div'), revisar = h('button', { disabled: '' }, 'Revisar (no guarda nada)'), importar = h('button', { class: 'sec', disabled: '' }, 'Importar ahora'), cajaDup = h('label', { style: 'display:flex;gap:8px;align-items:center;color:var(--texto)' }, dup, 'Importar también los que se parecen a alguien ya registrado');
   let texto = null;

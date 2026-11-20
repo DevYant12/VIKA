@@ -15,14 +15,16 @@
       <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z"/></svg></span>
       <h1>Vika</h1>
     </div>
-    <div id="sesion" hidden><span id="usuario"></span><button id="mipin" class="sec">Mi PIN</button><button id="salir" class="sec">Salir</button></div>
+    <div id="sesion" hidden><span id="usuario"></span><label class="tamano" for="tamano">Texto</label><select id="tamano" aria-label="Tamaño de letra"><option value="normal">Normal</option><option value="grande">Grande</option><option value="muy-grande">Muy grande</option></select><button id="ayuda" class="sec">¿Necesitas ayuda?</button><button id="mipin" class="sec">Mi PIN</button><button id="salir" class="sec">Salir</button></div>
   </header>
   <nav hidden>
     <span class="pill"></span>
-    <button data-v="agendar" class="on">Agendar</button>
+    <button data-v="inicio" class="on">Inicio</button>
+    <button data-v="agendar">Agendar cita</button>
     <button data-v="mis" hidden>Mis citas</button>
     <button data-v="citas">Citas del día</button>
     <button data-v="pacientes">Nuevo paciente</button>
+    <button data-v="buscar">Buscar paciente</button>
     <button data-v="pend" hidden>Sin confirmar</button>
     <button data-v="equipo" hidden>Equipo</button>
     <button data-v="ajustes" hidden>Ajustes</button>
