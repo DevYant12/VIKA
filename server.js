@@ -14,7 +14,7 @@ const leer = req => new Promise(ok => { let d = ''; req.on('data', c => { d += c
 const leerGrande = req => new Promise(ok => { let d = '', largo = false; req.on('data', c => { if (largo) return; d += c; if (d.length > 2e6) { largo = true; d = ''; } });
   req.on('end', () => { if (largo) return ok(null); try { ok(JSON.parse(d || '{}')); } catch { ok(null); } }); });
 const audit = (q, a, d) => db.prepare('INSERT INTO auditoria(quien,accion,detalle) VALUES(?,?,?)').run(q || 'sin nombre', a, JSON.stringify(d));
-const ahora = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
+const ahora = () => V.ahoraLocal();       // hora de las clínicas (VIKA_TZ), no la del computador
 
 async function api(req, res, url) {
   const p = url.pathname.replace('/api/', ''), q = url.searchParams, M = req.method;
