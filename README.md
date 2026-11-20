@@ -24,7 +24,7 @@ Al arrancar, la terminal muestra el **PIN inicial** de la Dra. Paredes. Abra htt
 
 ## Pruebas
 `npm test` corre las pruebas automáticas (195; incluye reprogramación atómica, historial de cambios, validaciones, 500 citas en un día, base de datos, PIN, citas simultáneas, horarios, importación, copias externas, HTTPS, sincronización sin internet y toda la API).
-`npm run test:ui` prueba la interfaz con un navegador simulado (caída del internet, citas sin confirmar, choques). Solo esa necesita `npm i --no-save jsdom`.
+`npm run test:ui` prueba la interfaz con un navegador simulado (caída del internet, citas sin confirmar, choques). `npm ci` instala `jsdom` desde `devDependencies`; no hace falta instalarlo manualmente.
 
 ## Interfaz de recepción fácil
 Después de entrar como personal aparece un inicio con cuatro acciones grandes: **Agendar cita**, **Consultar citas**, **Registrar paciente** y **Buscar paciente**. La agenda permite reprogramar una cita con comprobación de disponibilidad real; el cambio se hace de forma atómica, conserva el anticipo y queda en el historial de auditoría. Desde Buscar paciente se puede abrir el historial administrativo de citas y anticipos, sin mostrar información médica innecesaria.
@@ -46,8 +46,13 @@ Los pacientes crean su cuenta, aceptan los términos y pagan un anticipo (pago *
 ## Zona horaria
 Las clínicas usan la hora de Ecuador continental (`America/Guayaquil`, sin cambio de hora) **sin importar la zona del computador**. Para Galápagos: `VIKA_TZ=Pacific/Galapagos`.
 
-## Historial del repositorio
-Este repositorio **empezó con una versión del sistema que ya existía**, importada en el primer commit (`Importar versión existente de Vika`); por eso el historial anterior a esa fecha no está. Lo hecho después, para cumplir las bases, va en commits separados (cada uno dice qué y por qué). Cada integrante debe hacer sus propios commits desde ahora y poder explicarlos. **Cierre:** el viernes por la noche se crea la etiqueta `entrega-final`:
+## Historial del repositorio y estado de Vika 1.0
+El repositorio real de GitHub fue iniciado por **Royant**, único integrante del equipo, el martes 17 de noviembre. El historial conserva commits de ese día, del jueves 19 y de la continuación del viernes 20. Las ramas de trabajo incluyen `cambio-de-planes`, `mejora/citas-simultaneas` y `mejora/offline-seguridad-horarios-copias`; sus cambios fueron integrados en `main` mediante pull requests.
+
+Los commits están firmados con el autor real `Royant <ciadoyant@gmail.com>` y describen qué se cambió. La rama `vika-1.0` contiene la versión de trabajo actual con las pruebas y la documentación consolidadas. **Esta no es todavía la entrega final:** no se ha creado la etiqueta `entrega-final` porque el desarrollo continúa.
+
+Cuando se termine la revisión y se decida cerrar el concurso, se creará la etiqueta sin modificar commits posteriores:
 ```bash
-git tag entrega-final && git push origin main --tags
+git tag -a entrega-final -m "Entrega final del concurso ClinAgenda"
+git push origin entrega-final
 ```

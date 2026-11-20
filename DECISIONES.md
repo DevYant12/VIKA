@@ -107,7 +107,7 @@ Pidió: los pacientes agendan ellos mismos tras entrar con su cuenta, pagan un a
 - **El pago es SIMULADO.** Un botón lo marca como pagado. Con un proveedor real (PayPhone, Stripe…) debe confirmarse con el aviso del proveedor, nunca con lo que diga el navegador. Nunca se guardan datos de tarjeta.
 - **Riesgo legal que no puedo resolver:** no soy abogado. La Ley Orgánica de Defensa del Consumidor regula los contratos de adhesión y declara nulas ciertas cláusulas abusivas; no encontré norma que diga expresamente si un anticipo no reembolsable para una cita médica es válido. **Hay que revisarlo con un abogado antes de cobrar.** Por eso dejé las tres salidas (devolución por clínica/emergencia, texto claro antes de pagar, ventana de devolución por variable).
 
-## 10. Mejoras implementadas en la finalización
+## 10. Mejoras implementadas en Vika 1.0
 1. **Reprogramación:** `POST /api/citas/:id/reprogramar` comprueba fecha futura, médico, clínica y horario; actualiza la cita dentro de una transacción SQLite y conserva el anticipo. La restricción única del médico y hora protege las carreras entre recepcionistas. Cada cambio queda en `reprogramaciones` y en auditoría. ✅ (`tests/reprogramar.test.js`)
 2. **Historial desde la interfaz:** «Buscar paciente» permite abrir las citas activas y canceladas y los cambios de horario. La API no expone este historial a pacientes. ✅
 3. **Recepción fácil:** inicio con cuatro acciones grandes, ayuda contextual sin Internet, navegación de teclado y tamaño de letra por usuario. ✅ implementado; 🟡 pendiente de observar a una persona no técnica.
@@ -129,4 +129,5 @@ Usé IA para escribir y revisar código y pruebas. Antes de pedirle nada leí la
 ## 13. Control de versiones y datos sensibles
 - El repositorio no contiene datos reales, contraseñas ni llaves: `.gitignore` excluye `*.db`, copias (`backups/`), `.env` y `node_modules/`. El PIN inicial de la doctora se **genera al arrancar** y solo se muestra en la terminal.
 - Los datos de `datos-ejemplo/` son inventados.
-- Historial: ver `README.md` (sección *Historial del repositorio*) para una descripción honesta de cómo se construyó.
+- Historial: ver `README.md` (sección *Historial del repositorio y estado de Vika 1.0*) para una descripción honesta de cómo se construyó. Soy el único integrante y los commits del repositorio real usan mi autor `Royant <ciadoyant@gmail.com>`.
+- Estado actual: Vika 1.0 sigue en desarrollo. La etiqueta `entrega-final` todavía no existe y solo se creará cuando termine la revisión del concurso.
