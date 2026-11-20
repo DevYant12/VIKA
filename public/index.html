@@ -9,6 +9,7 @@
 </head>
 <body>
   <div id="offline" hidden role="alert">Sin conexión con el sistema. Lo que escriba no se guardará hasta que vuelva el internet.</div>
+  <div id="pendientes" hidden role="status"></div>
   <header>
     <div class="marca">
       <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z"/></svg></span>
@@ -22,10 +23,14 @@
     <button data-v="mis" hidden>Mis citas</button>
     <button data-v="citas">Citas del día</button>
     <button data-v="pacientes">Nuevo paciente</button>
+    <button data-v="pend" hidden>Sin confirmar</button>
     <button data-v="equipo" hidden>Equipo</button>
+    <button data-v="ajustes" hidden>Ajustes</button>
   </nav>
   <main id="vista"></main>
   <div id="aviso" role="status" aria-live="polite"></div>
+  <script src="js/cola.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/ajustes.js"></script>
 </body>
 </html>
