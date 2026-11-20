@@ -43,6 +43,13 @@ async function api(req, res, url) {
     const r = crearPaciente(b); if (r.status === 201) audit(u.nombre, 'crear_paciente', { id: r.body.id, nombre: r.body.nombre });
     return send(res, r.status, r.body);
   }
+  const hp = p.match(/^pacientes\/(\d+)\/citas$/);          // historial de un paciente (solo personal)
+  if (hp && M === 'GET') {
+    const pa = db.prepare('SELECT id,nombre FROM pacientes WHERE id=?').get(hp[1]);
+    if (!pa) return send(res, 404, { error: 'No existe ese paciente.' });
+    return send(res, 200, { paciente: pa, citas: db.prepare(`SELECT ci.id,ci.inicio,ci.estado,ci.anticipo,me.nombre medico,cl.nombre clinica FROM citas ci
+      JOIN medicos me ON me.id=ci.medico_id JOIN clinicas cl ON cl.id=ci.clinica_id WHERE ci.paciente_id=? ORDER BY ci.inicio DESC LIMIT 200`).all(pa.id) });
+  }
   const ac = p.match(/^pacientes\/(\d+)\/acceso$/);
   if (ac && M === 'POST') {
     const pa = db.prepare('SELECT id,nombre,tipo_doc,documento FROM pacientes WHERE id=?').get(ac[1]);
