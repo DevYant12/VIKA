@@ -1,0 +1,16 @@
+﻿Nombre;Cédula;Celular;Fecha de nacimiento;Correo
+María López;1710001015;0991234567;05/03/1990;maria@correo.com
+MARÍA  lópez;1710001015;991234567;05/03/1990;
+Juan Pérez;1710001023;022345678;1985-07-12;juan@gmail.com
+Juan Perez;0910001031;0987654321;12/01/2001;
+Pedro Mal Cédula;123456789;;;
+Cero Cero;0000000000;;;
+Carla Teléfono;1710001049;12345;;
+Correo Roto;1710001056;;;juan@@gmail
+Futuro Nacido;1710001064;;01/01/2090;
+Abuelo Antiguo;1710001072;;01/01/1700;
+Niño Sin Documento;;;14/02/2018;
+Tom Extranjero;AB123456;0991112222;30/08/1979;tom@example.com
+Rosa 😀 Emoji;1710001080;;;
+<script>alert(1)</script>;1710001098;;;
+Ana Sofía Ñandú;110001104;0990000001;;

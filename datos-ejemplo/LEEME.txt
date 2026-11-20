@@ -1,0 +1,7 @@
+Datos INVENTADOS (no son de personas reales) para probar la importación.
+Están hechos a propósito con errores, como los entregaría una clínica real:
+cédulas inválidas, ceros iniciales perdidos, homónimos, fechas imposibles, teléfonos y correos rotos, emojis y código pegado.
+
+Orden para importar (Ajustes > Importar, primero 'Revisar sin guardar'):
+  1. medicos.csv   2. pacientes.csv   3. horarios.csv   4. citas-pasadas.csv
+Resultado esperado: lo bueno se importa; lo malo aparece en la lista con el motivo y cómo corregirlo.

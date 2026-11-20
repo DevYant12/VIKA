@@ -1,0 +1,7 @@
+﻿Paciente;Cédula;Médico;Clínica;Fecha;Hora;Estado
+María López;1710001015;Dr. Mora;Centro;15/03/2026;09:30;atendida
+Juan Pérez;1710001023;Dr. Salazar;Norte;16/03/2026;14:00;cancelada
+Tom Extranjero;AB123456;Dr. Mora;Sur;17/03/2026;08:30;
+Juan Perez;;Dr. Mora;Centro;18/03/2026;10:00;
+Paciente Inexistente;;Dr. Mora;Centro;18/03/2026;11:00;
+María López;1710001015;Dr. Mora;Centro;31/02/2026;09:00;
