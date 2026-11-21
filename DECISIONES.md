@@ -3,7 +3,7 @@
 Aquí está lo que decidí para el sistema de la Dra. Paredes, por qué, y lo que **no** resolví. Prefiero decir "esto falta" antes que fingir que todo está resuelto.
 
 **Cómo leer este archivo:** cada pregunta de las bases tiene su respuesta, con una etiqueta: ✅ resuelto y probado · 🟡 resuelto a medias · ❌ no resuelto (con lo que haría).
-Las pruebas automáticas (`npm test`, 192) respaldan casi todo lo marcado ✅; entre paréntesis dejo el archivo de pruebas.
+Las pruebas automáticas (`npm test`, 193) respaldan casi todo lo marcado ✅; entre paréntesis dejo el archivo de pruebas.
 
 ---
 
@@ -47,7 +47,7 @@ Con el cambio de planes apareció otra: cancelar es fácil, pero ahora **cuesta*
 | ¿Es el mismo Juan Pérez? ¿Dos con el mismo nombre? | Se compara **por documento** si existe. Si solo coincide el nombre, **no bloquea**: muestra a quién se parece (con fecha de nacimiento) y pide confirmar, porque pueden ser dos personas. Nombres se comparan sin tildes, mayúsculas ni espacios extra. | ✅ |
 | Paciente sin cédula, correo ni teléfono | Se puede registrar ("todavía no tiene documento"); teléfono y correo son opcionales. Hay niños y adultos mayores así. Límite: **sin documento no puede crear su propia cuenta** (se le agenda por recepción). | ✅ |
 | Teléfono mal escrito | Se valida el formato (celular 09 + 8 dígitos; fijo con código de provincia) y se dice cómo corregir. **Límite:** no se puede saber si el número *existe*; eso solo lo confirmaría un mensaje de prueba (❌, ver "pendiente"). | 🟡 |
-| ¿Quién ve qué? | Dos roles de personal + paciente. **Doctora:** todo, crea/quita accesos, ve el historial de movimientos, configura horarios, importa datos, devuelve anticipos. **Recepción:** agenda, cancela, registra pacientes, da acceso a pacientes; no administra personas ni ve el historial. **Paciente:** solo sus propias citas. (`acceso.test.js`) | ✅ |
+| ¿Quién ve qué? | Dos roles de personal + paciente. **Doctora:** todo, crea/quita accesos, ve el historial de movimientos, configura horarios, importa datos, devuelve anticipos. **Recepción:** agenda, cancela, registra pacientes, da acceso a pacientes y consulta el historial administrativo del paciente; no administra personas ni ve la auditoría global. **Paciente:** solo sus propias citas. (`acceso.test.js`) | ✅ |
 
 ## 3. Sobre los datos médicos
 | Pregunta | Qué hace el sistema | Estado |
@@ -59,7 +59,7 @@ Con el cambio de planes apareció otra: cancelar es fácil, pero ahora **cuesta*
 ## 4. Sobre el uso real
 | Pregunta | Qué hace el sistema | Estado |
 |---|---|---|
-| ¿Podría doña Rosa usarlo sin ayuda? ¿Se probó? | Diseñado para ella: 3 pantallas principales (agendar, citas del día, nuevo paciente), letra grande, botones amplios, pasos numerados. **Pero no lo probé con una persona no técnica.** Dejé `docs/PRUEBA-USUARIO.md` con el guion y la hoja para anotar qué pasó. Lo primero que haría con más tiempo. | ❌ (probar) |
+| ¿Podría doña Rosa usarlo sin ayuda? ¿Se probó? | En una prueba exploratoria reportada por el equipo, una persona confundió la pantalla inicial con «Entrar» y no vio que debía crear una cuenta. Se priorizó y separó «Crear cuenta» / «Ya tengo cuenta · Entrar», con el acceso del personal aparte. Falta repetir la prueba humana y completar las tareas del guion; no se conocen fecha, dispositivo ni resultados de las otras tareas. Ver `docs/PRUEBA-USUARIO.md`. | 🟡 (repetir y completar) |
 | ¿El mensaje de error sirve a una persona normal? | Todos los errores dicen qué pasó y qué hacer ("La cédula no es válida. Debe tener 10 números; revise que no falte ni sobre ninguno"). Un error interno del sistema dice "Algo salió mal… intente de nuevo; si sigue igual, avise a soporte", sin códigos. | ✅ |
 | Botón equivocado: ¿se puede deshacer? | Cancelar pide confirmación y se puede **Reactivar**. Registrar un paciente por error no borra nada peligroso (se puede ignorar). **Límite:** reactivar falla si otra persona ya tomó esa hora, y lo explica. | 🟡 |
 | ¿Celular, letra pequeña, poca luz? | Diseño adaptable a celular, letra grande, **modo oscuro** automático (sigue la configuración del teléfono) y campos con etiquetas para lectores de pantalla. **No medí el contraste ni lo probé con poca luz real.** | ✅ |
@@ -75,10 +75,10 @@ Con el cambio de planes apareció otra: cancelar es fácil, pero ahora **cuesta*
 Cosas que un sistema así necesita y ella no mencionó:
 - **Auditoría y copias de seguridad** ✅ (arriba).
 - **Quién administra cuando ella no está:** hoy solo existe el rol "doctora". ❌ Habría que permitir un segundo administrador de confianza.
-- **Historial por paciente** ✅ (nuevo: `GET /api/pacientes/:id/citas`, probado). 🟡 *Falta botón en la pantalla.*
+- **Historial por paciente** ✅ (`GET /api/pacientes/:id/citas` y botón «Ver historial» desde Buscar paciente).
 - **Recordatorios por mensaje** (faltan menos pacientes) ❌.
 - **Lista de espera** para aprovechar horas liberadas ❌.
-- **Citas de cambio de médico/clínica** (reprogramar) ❌: hoy se cancela y se agenda otra.
+- **Cambio de médico o clínica:** si cambia el plan, se cancela la cita y se registra una nueva.
 - **Privacidad legal:** en Ecuador rige la Ley Orgánica de Protección de Datos Personales; los datos de salud son sensibles. No soy abogado: antes de usarlo de verdad hay que revisar consentimiento, retención y quién es el responsable del tratamiento.
 
 ## 7. Sobre la calidad de los datos
@@ -102,27 +102,33 @@ Pidió: los pacientes agendan ellos mismos tras entrar con su cuenta, pagan un a
 - Debe leer y **marcar** los términos; se guarda **qué versión** aceptó y **cuándo**.
 - La hora queda apartada **15 minutos** mientras paga; si no paga, se libera sola.
 - Si cancela con el anticipo pagado, queda **retenido** y se le avisa **antes** de confirmar. Si no había pagado, cancelar es gratis.
-- Monto y plazos por variables: `VIKA_ANTICIPO` ($5), `VIKA_MINUTOS_PAGO` (15), `VIKA_HORAS_REEMBOLSO` (0 = nunca).
+- Monto y plazos por variables: `VIKA_ANTICIPO` ($10 por defecto), `VIKA_MINUTOS_PAGO` (15), `VIKA_HORAS_REEMBOLSO` (0 = nunca).
 - El anticipo se devuelve completo si cancela la clínica o hay emergencia (solo la doctora, y queda anotado).
 - **El pago es SIMULADO.** Un botón lo marca como pagado. Con un proveedor real (PayPhone, Stripe…) debe confirmarse con el aviso del proveedor, nunca con lo que diga el navegador. Nunca se guardan datos de tarjeta.
 - **Riesgo legal que no puedo resolver:** no soy abogado. La Ley Orgánica de Defensa del Consumidor regula los contratos de adhesión y declara nulas ciertas cláusulas abusivas; no encontré norma que diga expresamente si un anticipo no reembolsable para una cita médica es válido. **Hay que revisarlo con un abogado antes de cobrar.** Por eso dejé las tres salidas (devolución por clínica/emergencia, texto claro antes de pagar, ventana de devolución por variable).
 
-## 10. Lo que NO resolví (y cómo lo haría)
-1. **Probar con una persona no técnica** (doña Rosa). Haría 3 tareas cronometradas sin ayuda y arreglaría donde se trabe. Guion en `docs/PRUEBA-USUARIO.md`.
+## 10. Mejoras implementadas en la finalización
+**Decisión de última hora:** decidí quitar la opción de cambiar una cita porque me di cuenta de que tenía un fallo y preferí dejar únicamente la cancelación, para no ofrecer una operación que pudiera dejar datos o disponibilidad inconsistentes.
+
+1. **Cancelación:** una cita se cancela con confirmación, nunca se borra, y puede reactivarse si la hora sigue libre; el anticipo se trata según sus reglas y queda en auditoría. ✅
+2. **Historial desde la interfaz:** «Buscar paciente» permite abrir las citas activas y canceladas. La API no expone este historial a pacientes. ✅
+3. **Recepción fácil:** inicio con cuatro acciones grandes, ayuda contextual sin Internet, navegación de teclado y tamaño de letra por usuario. La prueba exploratoria reveló confusión al crear cuenta; se cambió el acceso y queda pendiente validarlo de nuevo con una persona.
+4. **Pruebas:** la suite automática y la prueba de interfaz cubren cancelación, reactivación, citas sin internet y el resto de reglas del sistema.
+
+## 11. Lo que NO resolví (y cómo lo haría)
+1. **Repetir y completar la prueba con una persona no técnica** después del cambio del acceso. Cronometrar las 5 tareas sin ayuda y registrar fecha, dispositivo y resultados en `docs/PRUEBA-USUARIO.md`.
 2. **Pago real del anticipo** (proveedor + confirmación por webhook).
 3. **Verificación en dos pasos.** Un PIN de 6 números es una barrera modesta frente a alguien con acceso físico al equipo.
 4. **Recordatorios por mensaje y lista de espera.**
-5. **Botón de historial del paciente** en la pantalla (la API ya existe).
-6. **Segundo administrador** y registro de quién tiene acceso.
-7. **Reprogramar una cita** en un solo paso.
-8. **Confirmar que un teléfono existe** (mensaje de prueba).
-9. **Que la doctora configure y pruebe la copia externa.** Es lo único que no puedo garantizar yo.
-10. **Pruebas automáticas de la interfaz** (`npm run test:ui`) necesitan `npm i --no-save jsdom`; no las corrí en mi último ciclo por falta de red.
+5. **Segundo administrador** y registro de quién tiene acceso.
+6. **Confirmar que un teléfono existe** (mensaje de prueba).
+7. **Que la doctora configure y pruebe la copia externa.** Es lo único que no puedo garantizar yo.
+8. **Recordatorios y lista de espera** requieren diseño adicional e integraciones o proceso operativo.
 
-## 11. Uso de inteligencia artificial
+## 12. Uso de inteligencia artificial
 Usé IA para escribir y revisar código y pruebas. Antes de pedirle nada leí la historia, listé las preocupaciones y decidí las reglas (qué pasa con cada pregunta); después la usé para implementarlas y para buscar casos que se me escapaban (por ejemplo, el "31 de febrero" y la dependencia de la zona horaria salieron de revisar el código con mirada crítica). Cada parte del sistema está cubierta por pruebas y debo poder explicarla en la defensa.
 
-## 12. Control de versiones y datos sensibles
+## 13. Control de versiones y datos sensibles
 - El repositorio no contiene datos reales, contraseñas ni llaves: `.gitignore` excluye `*.db`, copias (`backups/`), `.env` y `node_modules/`. El PIN inicial de la doctora se **genera al arrancar** y solo se muestra en la terminal.
 - Los datos de `datos-ejemplo/` son inventados.
 - Historial: ver `README.md` (sección *Historial del repositorio*) para una descripción honesta de cómo se construyó.

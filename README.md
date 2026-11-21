@@ -23,17 +23,25 @@ Al arrancar, la terminal muestra el **PIN inicial** de la Dra. Paredes. Abra htt
 - `datos-ejemplo/` archivos inventados para probar la importación
 
 ## Pruebas
-`npm test` corre las pruebas automáticas (192; validaciones, 500 citas en un día, base de datos, PIN, citas simultáneas, horarios, importación, copias externas, HTTPS, sincronización sin internet y toda la API).
-`npm run test:ui` prueba la interfaz con un navegador simulado (caída del internet, citas sin confirmar, choques). Solo esa necesita `npm i --no-save jsdom`.
+`npm test` corre las pruebas automáticas (incluye cancelación/reactivación, validaciones, 500 citas en un día, base de datos, PIN, citas simultáneas, horarios, importación, copias externas, HTTPS, sincronización sin internet y toda la API).
+`npm ci` instala las dependencias bloqueadas y `npm run test:ui` prueba la interfaz con un navegador simulado (caída del internet, citas sin confirmar, choques); la CI usa esos mismos comandos.
+
+## Interfaz de recepción fácil
+Después de entrar como personal aparece un inicio con cuatro acciones grandes: **Agendar cita**, **Consultar citas**, **Registrar paciente** y **Buscar paciente**. Desde la agenda se puede cancelar una cita con confirmación y reactivarla si la hora sigue libre. Desde Buscar paciente se puede abrir el historial administrativo de citas y anticipos, sin mostrar información médica innecesaria.
+
+La ayuda contextual funciona sin Internet desde «¿Necesitas ayuda?». El tamaño de letra se puede guardar por usuario como Normal, Grande o Muy grande. Una prueba exploratoria con una persona reveló confusión entre crear cuenta y entrar; se aclaró la pantalla inicial. Falta repetir la prueba humana después del cambio y completar el guion de `docs/PRUEBA-USUARIO.md`.
 
 ## Seguridad y publicación
 Por defecto Vika **solo escucha en este computador**. Para usarla desde las clínicas hay que ponerle HTTPS: ver `docs/PUBLICAR.md` (también explica las copias externas cifradas y el trabajo sin internet).
+
+## GitHub y comprobación automática
+GitHub debe alojar el repositorio y su historial; `.github/workflows/test.yml` ejecuta `npm test` y `npm run test:ui` con Node.js 22 en cada cambio. **GitHub Pages no puede ejecutar Vika completa**, porque solo sirve archivos estáticos y no ejecuta `server.js`, SQLite, sesiones ni la API. Para usar la aplicación real desde las tres clínicas se necesita un servidor Node.js con HTTPS; la guía está en `docs/PUBLICAR.md`.
 
 ## Qué puede hacer la doctora (pestaña Ajustes)
 Ver el estado de las copias y hacer una al momento · definir el horario de cada médico en cada clínica y el horario general de cada clínica · activar o desactivar médicos · **importar** pacientes, médicos y horarios desde Excel (primero se revisa sin guardar). Recepción puede **activar el acceso** de un paciente ya registrado o darle un PIN nuevo (pestaña Nuevo paciente).
 
 ## Pacientes y anticipo
-Los pacientes crean su cuenta, aceptan los términos y pagan un anticipo (pago **simulado**). Se configura con variables: `VIKA_ANTICIPO` (dólares, 5 por defecto), `VIKA_MINUTOS_PAGO` (15) y `VIKA_HORAS_REEMBOLSO` (0 = nunca se devuelve).
+En el primer ingreso, los pacientes ven por separado **Soy paciente nuevo · Crear cuenta** y **Ya tengo cuenta · Entrar**; el acceso del personal está en una sección independiente. Los pacientes aceptan los términos y pagan un anticipo de **$10** (pago **simulado**). Se configura con variables: `VIKA_ANTICIPO` (dólares, 10 por defecto), `VIKA_MINUTOS_PAGO` (15) y `VIKA_HORAS_REEMBOLSO` (0 = nunca se devuelve).
 
 ## Zona horaria
 Las clínicas usan la hora de Ecuador continental (`America/Guayaquil`, sin cambio de hora) **sin importar la zona del computador**. Para Galápagos: `VIKA_TZ=Pacific/Galapagos`.

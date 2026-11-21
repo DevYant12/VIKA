@@ -47,7 +47,7 @@ async function api(req, res, url) {
   if (hp && M === 'GET') {
     const pa = db.prepare('SELECT id,nombre FROM pacientes WHERE id=?').get(hp[1]);
     if (!pa) return send(res, 404, { error: 'No existe ese paciente.' });
-    return send(res, 200, { paciente: pa, citas: db.prepare(`SELECT ci.id,ci.inicio,ci.estado,ci.anticipo,me.nombre medico,cl.nombre clinica FROM citas ci
+    return send(res, 200, { paciente: pa, citas: db.prepare(`SELECT ci.id,ci.inicio,ci.estado,ci.anticipo,ci.anticipo_monto,me.nombre medico,cl.nombre clinica FROM citas ci
       JOIN medicos me ON me.id=ci.medico_id JOIN clinicas cl ON cl.id=ci.clinica_id WHERE ci.paciente_id=? ORDER BY ci.inicio DESC LIMIT 200`).all(pa.id) });
   }
   const ac = p.match(/^pacientes\/(\d+)\/acceso$/);

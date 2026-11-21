@@ -1,5 +1,5 @@
 // Prueba de la interfaz con un navegador simulado (jsdom): entrar, caída del internet, citas sin confirmar, reconexión, choques.
-// jsdom NO es dependencia del proyecto. Instalar solo para esta prueba:  npm i --no-save jsdom   y luego   npm run test:ui
+// jsdom es dependencia de desarrollo. Instalar desde el lockfile con npm ci y luego ejecutar npm run test:ui
 const { JSDOM } = require('jsdom'), { spawn } = require('node:child_process'), fs = require('node:fs'), os = require('node:os'), path = require('node:path'), assert = require('node:assert/strict');
 const PROY = path.join(__dirname, '..'), { cedula } = require(path.join(PROY, 'tests', 'helpers.js'));
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'smk-')), PORT = 4990 + Math.floor(Math.random() * 9), BASE = `http://127.0.0.1:${PORT}`;
@@ -32,9 +32,13 @@ async function main() {
   // ---------- 1. Entrar como doctora
   const dom = await abrir(), w = dom.window;
   await esperar(() => qa(w, '#vista button').some(b => /Paredes/.test(b.textContent)), 8000, 'pantalla de acceso'); paso('carga la pantalla de acceso');
+  assert.match(vista(w), /Soy paciente nuevo · Crear cuenta[\s\S]*Ya tengo cuenta · Entrar[\s\S]*Acceso del personal/);
+  assert.ok(qa(w, '#vista button')[0].textContent.includes('Soy paciente nuevo'));
+  paso('prioriza el registro de pacientes y distingue crear cuenta de entrar con una cuenta existente');
   clic(w, qa(w, '#vista button').find(b => /Paredes/.test(b.textContent)));
   const pin = await esperar(() => q(w, '#vista input[type=password]'), 3000, 'campo PIN'); pin.value = PIN; clic(w, qa(w, '#vista button').find(b => b.textContent === 'Entrar'));
-  await esperar(() => !q(w, 'nav').hidden && qa(w, '.hora').length, 8000, 'agenda tras entrar'); paso('entra con PIN y carga las horas');
+  await esperar(() => !q(w, 'nav').hidden && /¿Qué desea hacer/.test(vista(w)), 8000, 'inicio tras entrar'); paso('entra con PIN y muestra las acciones principales');
+  nav(w, 'agendar'); await esperar(() => qa(w, '.hora').length, 8000, 'agenda tras entrar'); paso('abre Agendar cita y carga las horas');
   assert.equal(q(w, 'nav [data-v=ajustes]').hidden, false); assert.equal(q(w, 'nav [data-v=pend]').hidden, true); assert.equal(q(w, '#mipin').hidden, false); paso('doctora ve Ajustes; "Sin confirmar" oculto mientras no hay nada');
   await esperar(() => w.localStorage.getItem('vika_agenda'), 5000, 'agenda guardada para trabajar sin internet'); assert.ok(w.localStorage.getItem('vika_cat') && w.localStorage.getItem('vika_yo')); paso('guarda catálogo, identidad y agenda para trabajar sin internet');
   await esperar(() => /Ajustes ⚠/.test(q(w, 'nav [data-v=ajustes]').textContent), 3000, 'aviso de copia externa'); paso('avisa a la doctora que no hay copia externa');
@@ -70,7 +74,7 @@ async function main() {
   internet = true; w.dispatchEvent(new w.Event('online'));
   await esperar(() => JSON.parse(w.localStorage.getItem('vika_cola') || '[]')[0]?.estado === 'conflicto', 6000, 'conflicto detectado'); paso('el choque se detecta: la cita NO se pierde ni se da por confirmada');
   assert.match(q(w, '#pendientes').textContent, /necesita/); nav(w, 'pend'); await esperar(() => /ya fue tomada/.test(vista(w)) && qa(w, '#vista .hora').length >= 3, 3000, 'alternativas'); paso('muestra el motivo y horas alternativas para elegir');
-  clic(w, qa(w, '#vista .hora')[0]); await esperar(() => JSON.parse(w.localStorage.getItem('vika_cola') || '[]').length === 0, 6000, 'reprogramada'); await esperar(() => /No hay citas sin confirmar/.test(vista(w)), 3000); paso('al elegir otra hora se confirma y la cola queda vacía');
+  clic(w, qa(w, '#vista .hora')[0]); await esperar(() => JSON.parse(w.localStorage.getItem('vika_cola') || '[]').length === 0, 6000, 'hora alternativa elegida'); await esperar(() => /No hay citas sin confirmar/.test(vista(w)), 3000); paso('al elegir otra hora se confirma y la cola queda vacía');
 
   // ---------- 5. Ajustes de la doctora
   nav(w, 'ajustes'); await esperar(() => /Copias de seguridad/.test(vista(w)) && /Horarios/.test(vista(w)) && /Médicos/.test(vista(w)) && /Importar datos/.test(vista(w)), 5000, 'ajustes');

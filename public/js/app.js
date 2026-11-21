@@ -27,6 +27,43 @@ let t; function aviso(txt) { const a = $('#aviso'); a.textContent = txt; a.class
 const hoy = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
 const opciones = (lista, f) => lista.map(x => h('option', { value: x.id }, f(x)));
 
+/* ---------- Inicio sencillo para recepción ---------- */
+function inicio() {
+  const esPac = yo.rol === 'paciente';
+  const acciones = [
+    ['agendar', '📅', 'Agendar cita', 'Buscar al paciente y reservar una hora disponible.'],
+    ['citas', '🗓', 'Consultar citas', 'Ver la agenda de hoy o de otro día.'],
+    ['pacientes', '👤', 'Registrar paciente', 'Guardar los datos de una persona nueva.'],
+    ['buscar', '🔎', 'Buscar paciente', 'Encontrar una persona y ver su historial administrativo.']
+  ].filter(x => !esPac || ['agendar'].includes(x[0]));
+  const s = h('section', {}, h('h2', {}, esPac ? '¿Qué desea hacer?' : '¿Qué desea hacer?'), h('p', { class: 'suave' }, 'Elija una opción. Puede volver aquí en cualquier momento.'),
+    h('div', { class: 'acciones-principales' }, ...acciones.map(([v, icono, titulo, desc]) => h('button', { class: 'accion-principal', onclick: () => irA(v) }, h('span', { class: 'accion-icono', 'aria-hidden': 'true' }, icono), h('strong', {}, titulo), h('small', {}, desc)))));
+  if (!esPac) s.append(h('p', { class: 'suave' }, 'Consejo: las horas tachadas ya están ocupadas. Si otra recepcionista reserva primero, Vika le avisará y podrá escoger otra hora.'));
+  $('#vista').replaceChildren(s);
+}
+
+function historialPaciente(p) {
+  api(`pacientes/${p.id}/citas`).then(r => {
+    if (!r.ok) return aviso(r.error || 'No se pudo consultar el historial.');
+    const lista = h('div');
+    if (!r.citas.length) lista.append(h('p', { class: 'suave' }, 'Este paciente todavía no tiene citas registradas.'));
+    (r.citas || []).forEach(c => lista.append(h('div', { class: 'fila' }, h('div', { class: c.estado === 'cancelada' ? 'cancelada' : '' }, h('strong', {}, c.inicio.replace('T', ' ')), h('div', { class: 'suave' }, `${c.medico} · ${c.clinica} · ${c.estado === 'cancelada' ? 'Cancelada' : 'Activa'}${ETQ[c.anticipo] ? ' · ' + ETQ[c.anticipo] : ''}`)))));
+    $('#vista').replaceChildren(h('section', {}, h('h2', {}, 'Historial de ' + p.nombre), h('p', { class: 'suave' }, 'Solo se muestran datos administrativos de citas y anticipos.'), lista, h('button', { class: 'sec', onclick: () => irA('buscar') }, 'Volver a buscar')));
+  });
+}
+
+function buscar() {
+  const bus = h('input', { placeholder: 'Escriba nombre o documento', 'aria-label': 'Buscar paciente' }), rs = h('div');
+  bus.addEventListener('input', async () => {
+    rs.replaceChildren(); if (bus.value.trim().length < 2) return;
+    const r = await api('pacientes?q=' + encodeURIComponent(bus.value));
+    if (!Array.isArray(r)) return rs.append(h('p', { class: 'err' }, r.error || 'No se pudo buscar.'));
+    if (!r.length) return rs.append(h('p', { class: 'suave' }, 'No encontramos a ese paciente. Revise el nombre o documento.'));
+    r.forEach(p => rs.append(h('div', { class: 'fila' }, h('div', {}, h('strong', {}, p.nombre), h('div', { class: 'suave' }, p.documento || 'Sin documento')), h('button', { class: 'sec', onclick: () => historialPaciente(p) }, 'Ver historial'))));
+  });
+  $('#vista').replaceChildren(h('section', {}, h('h2', {}, 'Buscar paciente'), h('p', { class: 'suave' }, 'Escriba al menos dos letras o parte del documento.'), bus, rs)); bus.focus();
+}
+
 /* ---------- Agendar ---------- */
 function agendar() {
   const v = $('#vista'); v.replaceChildren();
@@ -107,11 +144,11 @@ async function citas() {
     if (!r.length && !locales.length) return lista.append(h('p', { class: 'suave' }, 'No hay citas este día. Use "Agendar cita" para crear la primera.'));
     r.forEach(c => lista.append(h('div', { class: 'fila' },
       h('div', { class: c.estado === 'cancelada' ? 'cancelada' : '' }, h('strong', {}, c.inicio.slice(11) + ' · ' + c.paciente), h('div', { class: 'suave' }, `${c.medico} · ${c.clinica}${ETQ[c.anticipo] ? ' · ' + ETQ[c.anticipo] : ''}${c.origen === 'offline' ? ' · registrada sin internet' : ''}`)),
-      c.estado === 'agendada' ? h('button', { class: 'peligro', onclick: async () => {
+      c.estado === 'agendada' ? h('div', {}, h('button', { class: 'peligro', onclick: async () => {
         if (!quien()) return aviso('Escriba su nombre arriba, en "Usted es".');
         if (!confirm(`¿Cancelar la cita de ${c.paciente} a las ${c.inicio.slice(11)}?`)) return;
         const x = await api(`citas/${c.id}/cancelar`, { quien: quien() }); aviso(x.ok ? (x.aviso || 'Cita cancelada. La hora quedó libre.') : x.error); cargar();
-      } }, 'Cancelar') : h('button', { class: 'sec', onclick: async () => { const x = await api(`citas/${c.id}/reactivar`, {}); aviso(x.ok ? (x.aviso || 'Cita reactivada.') : x.error); cargar(); } }, 'Reactivar'), (yo.rol === 'doctora' && c.anticipo === 'retenido') ? h('button', { class: 'sec', onclick: async () => { if (!confirm('¿Devolver el anticipo a este paciente?')) return; const x = await api(`citas/${c.id}/devolver-anticipo`, {}); aviso(x.ok ? 'Anticipo devuelto.' : x.error); cargar(); } }, 'Devolver anticipo') : '')));
+      } }, 'Cancelar')) : h('button', { class: 'sec', onclick: async () => { const x = await api(`citas/${c.id}/reactivar`, {}); aviso(x.ok ? (x.aviso || 'Cita reactivada.') : x.error); cargar(); } }, 'Reactivar'), (yo.rol === 'doctora' && c.anticipo === 'retenido') ? h('button', { class: 'sec', onclick: async () => { if (!confirm('¿Devolver el anticipo a este paciente?')) return; const x = await api(`citas/${c.id}/devolver-anticipo`, {}); aviso(x.ok ? 'Anticipo devuelto.' : x.error); cargar(); } }, 'Devolver anticipo') : '')));
   }
   fe.addEventListener('change', cargar); v.replaceChildren(h('section', {}, h('h2', {}, 'Citas del día'), fe, lista)); cargar();
 }
@@ -167,7 +204,7 @@ function pendientes() {
     const caja = h('section', {}, cab);
     if (i.estado === 'pendiente') caja.append(h('div', { class: 'nota' }, '⏳ Esperando conexión. Todavía NO está confirmada.'), descartar);
     else if (i.estado === 'conflicto') caja.append(h('div', { class: 'nota mal' }, i.mensaje), h('p', { class: 'suave' }, 'Elija otra hora para este paciente:'),
-      h('div', { class: 'horas' }, ...(i.alternativas || []).map(a => h('button', { class: 'hora', onclick: () => { Cola.reprogramar(store, i.cliente_id, a); tras(); } }, etiquetaHora(a)))), h('p'), descartar);
+      h('div', { class: 'horas' }, ...(i.alternativas || []).map(a => h('button', { class: 'hora', onclick: () => { Cola.elegirHora(store, i.cliente_id, a); tras(); } }, etiquetaHora(a)))), h('p'), descartar);
     else if (i.estado === 'revisar') caja.append(h('div', { class: 'nota mal' }, i.mensaje), ...(i.existentes || []).map(e => h('p', {}, h('button', { class: 'sec', onclick: () => { Cola.decidir(store, i.cliente_id, { paciente_id: e.id }); tras(); } }, `Es la misma persona: ${e.nombre}${e.nacimiento ? ' (' + e.nacimiento + ')' : ''}`))),
       h('p', {}, h('button', { class: 'sec', onclick: () => { Cola.decidir(store, i.cliente_id, {}); tras(); } }, 'Es otra persona (crear nuevo paciente)')), descartar);
     else caja.append(h('div', { class: 'nota mal' }, i.mensaje || 'No se pudo confirmar.'), h('button', { class: 'sec', onclick: () => { Cola.reintentar(store, i.cliente_id); tras(); } }, 'Reintentar'), ' ', descartar);
@@ -200,7 +237,7 @@ addEventListener('offline', () => { enLinea = false; mostrarEstadoRed(); });
 setInterval(() => { sincronizarCola(); }, 20000); setInterval(refrescarAgenda, 300000);
 
 /* ---------- Navegación ---------- */
-const vistas = { agendar, citas, pacientes, equipo, mis: misCitas, pend: pendientes, ajustes: () => window.ajustesVista && window.ajustesVista() };
+const vistas = { inicio, agendar, citas, pacientes, buscar, equipo, mis: misCitas, pend: pendientes, ajustes: () => window.ajustesVista && window.ajustesVista() };
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x === b)); pill(b); vistaActual = b.dataset.v; vistas[b.dataset.v]();
 }));
@@ -211,10 +248,10 @@ const irA = v => document.querySelector(`[data-v=${v}]`).click();
 
 async function login() {
   $('nav').hidden = true; $('#sesion').hidden = true;
-  const us = await api('auth/usuarios'), caja = h('section', {}, h('h2', {}, '¿Quién es usted?'));
+  const us = await api('auth/usuarios'), caja = h('section', {}, h('h2', {}, 'Acceso del personal'), h('p', { class: 'suave' }, 'Doctora y recepción: seleccione su nombre para entrar con su PIN.'));
   if (!Array.isArray(us)) caja.append(h('p', { class: 'err' }, us.sinRed ? 'No hay conexión con el sistema. Para entrar por primera vez en este equipo hace falta internet.' : us.error));
   else us.forEach(x => caja.append(h('p', {}, h('button', { class: 'sec', style: 'width:100%', onclick: () => pedirPin(x) }, x.nombre))));
-  $('#vista').replaceChildren(caja, seccionPaciente());
+  $('#vista').replaceChildren(seccionPaciente(), caja);
 }
 function pedirPin(x) {
   const pin = campoPin('PIN de 6 números');
@@ -229,9 +266,10 @@ async function iniciar(u, o = {}) {
   const c = o.sinRed ? { sinRed: true } : await api('catalogos'); if (c.sinRed) cat = leerJson('vika_cat') || cat; else { cat = c; if (!pac) guardarJson('vika_cat', c); }
   if (!pac && !o.sinRed) { guardarJson('vika_yo', yo); refrescarAgenda(); }
   $('nav').hidden = false; $('#sesion').hidden = false; $('#usuario').textContent = `${yo.nombre} (${{ doctora: 'doctora', recepcion: 'recepción', paciente: 'paciente' }[yo.rol]})${o.sinRed ? ' · sin conexión' : ''}`;
+  const tamano = store.getItem('vika_tamano_' + yo.nombre) || 'normal'; document.body.dataset.tamano = tamano; $('#tamano').value = tamano;
   document.querySelector('[data-v=equipo]').hidden = yo.rol !== 'doctora' || !!o.sinRed; document.querySelector('[data-v=ajustes]').hidden = yo.rol !== 'doctora' || !!o.sinRed; document.querySelector('[data-v=mis]').hidden = !pac;
-  ['citas', 'pacientes'].forEach(v => document.querySelector(`[data-v=${v}]`).hidden = pac); $('#mipin').hidden = !!o.sinRed;
-  mostrarEstadoRed(); irA('agendar'); actualizarPend(); sincronizarCola(); if (yo.rol === 'doctora' && !o.sinRed) avisosRespaldo();
+  ['citas', 'pacientes', 'buscar'].forEach(v => document.querySelector(`[data-v=${v}]`).hidden = pac); $('#mipin').hidden = !!o.sinRed;
+  mostrarEstadoRed(); irA(o.sinRed || pac ? 'agendar' : 'inicio'); actualizarPend(); sincronizarCola(); if (yo.rol === 'doctora' && !o.sinRed) avisosRespaldo();
 }
 async function avisosRespaldo() { const r = await api('respaldos'); if (r.avisos && r.avisos.length) { aviso('⚠ ' + r.avisos[0].mensaje); document.querySelector('[data-v=ajustes]').textContent = 'Ajustes ⚠'; } }
 // Si no hay internet al abrir y este equipo ya tenía una persona del personal, se entra en modo sin conexión (solo para agendar)
@@ -244,6 +282,17 @@ $('#mipin').addEventListener('click', () => {
   const a = campoPin('PIN actual'), n = campoPin('PIN nuevo');
   $('#vista').replaceChildren(h('section', {}, h('h2', {}, 'Cambiar mi PIN'), h('label', {}, 'PIN actual'), a, h('label', {}, 'PIN nuevo (6 números)'), n, h('p'),
     h('button', { onclick: async () => { const r = await api('auth/pin', { actual: a.value, nuevo: n.value }); aviso(r.ok ? 'PIN cambiado.' : r.error); if (r.ok) irA('agendar'); } }, 'Guardar PIN')));
+});
+
+$('#tamano').addEventListener('change', e => { if (!yo) return; document.body.dataset.tamano = e.target.value; store.setItem('vika_tamano_' + yo.nombre, e.target.value); });
+$('#ayuda').addEventListener('click', () => {
+  const pasos = [
+    '1. Para agendar, toque «Agendar cita», busque o registre al paciente y elija una hora que no esté tachada.',
+    '2. Para consultar la agenda, toque «Citas del día» y cambie la fecha si necesita revisar otro día.',
+    '3. Para cancelar, busque la cita y confirme. La cita no se borra: queda registrada y puede reactivarse si la hora sigue libre.',
+    '4. Si necesita revisar a una persona, toque «Buscar paciente» y luego «Ver historial».'
+  ];
+  $('#vista').replaceChildren(h('section', {}, h('h2', {}, 'Ayuda para esta pantalla'), h('p', { class: 'suave' }, 'Instrucciones rápidas, sin necesidad de Internet.'), h('ol', {}, ...pasos.map(x => h('li', {}, x))), h('button', { class: 'sec', onclick: () => irA(yo.rol === 'paciente' ? 'agendar' : 'inicio') }, 'Volver')));
 });
 
 /* ---------- Equipo (solo doctora) ---------- */
@@ -293,8 +342,8 @@ async function misCitas() {
         if (!confirm(txt)) return; const x = await api(`citas/${c.id}/cancelar`, {}); aviso(x.ok ? 'Cita cancelada.' : x.error); misCitas(); } }, 'Cancelar')) : '')));
   $('#vista').replaceChildren(h('section', {}, h('h2', {}, 'Mis citas'), lista));
 }
-const seccionPaciente = () => h('section', {}, h('h2', {}, '¿Es paciente?'), h('p', { class: 'suave' }, 'Entre para agendar su cita usted mismo.'),
-  h('button', { onclick: () => formPaciente(false) }, 'Entrar como paciente'), ' ', h('button', { class: 'sec', onclick: () => formPaciente(true) }, 'Crear mi cuenta'));
+const seccionPaciente = () => h('section', {}, h('h2', {}, 'Acceso para pacientes'), h('p', { class: 'suave' }, '¿Es su primera vez? Cree una cuenta. Si ya creó una, entre con su cédula o pasaporte y su PIN.'),
+  h('button', { onclick: () => formPaciente(true) }, 'Soy paciente nuevo · Crear cuenta'), ' ', h('button', { class: 'sec', onclick: () => formPaciente(false) }, 'Ya tengo cuenta · Entrar'));
 function formPaciente(registro) {
   const campos = registro ? [['nombre', 'Nombre completo', 'text'], ['tipo_doc', 'Documento', 'select'], ['documento', 'Número de documento', 'text'], ['telefono', 'Celular (opcional)', 'tel'],
     ['nacimiento', 'Fecha de nacimiento (opcional)', 'date'], ['pin', 'Cree un PIN de 6 números', 'password'], ['pin2', 'Repita el PIN', 'password']]
