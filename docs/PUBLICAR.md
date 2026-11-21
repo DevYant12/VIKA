@@ -2,7 +2,7 @@
 
 Vika guarda datos de salud y PIN. **Nunca debe quedar abierta en la red sin HTTPS.** Por eso, por defecto, solo escucha en el propio computador (`127.0.0.1`). Para que las tres clínicas la usen hay que ponerle HTTPS delante. Dos formas:
 
-> **Estado de esta entrega:** Vika está preparada para un servidor central y acceso simultáneo, pero no está desplegada en Internet desde este proyecto. Antes de usar datos reales, configure un dominio, HTTPS, una copia externa cifrada y pruebe una restauración en otro equipo. No comparta el puerto 3000 directamente.
+> **Estado de esta rama de prueba:** Vika está preparada para un servidor central y acceso simultáneo, pero no está desplegada en Internet desde este proyecto. Antes de usar datos reales, configure un dominio, HTTPS, una copia externa cifrada y pruebe una restauración en otro equipo. No comparta el puerto 3000 directamente.
 
 ## Opción A (recomendada): Caddy como "portero" con HTTPS automático
 Caddy consigue y renueva solo el certificado. Se instala en el mismo computador que Vika y necesita un nombre de dominio (ej. `citas.clinicaparedes.com`) apuntando a ese computador.
@@ -13,7 +13,7 @@ citas.clinicaparedes.com {
     reverse_proxy 127.0.0.1:3000
 }
 ```
-Vika sigue escuchando solo en `127.0.0.1:3000`; Caddy atiende a las clínicas por HTTPS. Vika detecta el HTTPS (cabecera `X-Forwarded-Proto`) y pone la cookie como `Secure` y activa HSTS.
+Vika sigue escuchando solo en `127.0.0.1:3000`; Caddy atiende a las clínicas por HTTPS. Vika usa `X-Forwarded-Proto` para reconocer HTTPS detrás de un proxy y marcar la cookie como `Secure`. Configure el proxy para sobrescribir y no aceptar del cliente esa cabecera sin validar; HSTS se activa en solicitudes que la aplicación reconoce como HTTPS.
 
 ## Opción B: certificado propio en Vika
 ```bash
@@ -48,7 +48,7 @@ Mientras no hay conexión, el personal puede **seguir agendando**: las citas que
 - Una cita sin confirmar **no es una cita**: hasta que el sistema la acepte, puede perderse la hora. Se le dice al paciente que se le confirmará.
 - Si dos clínicas tomaron la misma hora sin internet, **gana la primera que se sincroniza**; a la otra se le muestran horas libres cercanas para elegir con un toque. Nada se pierde en silencio.
 - El paciente se reconoce por su cédula; si solo coincide el nombre, el sistema pregunta (no adivina).
-- Los datos de esas citas pendientes están en el navegador de ese computador hasta enviarse; úselo solo en equipos de la clínica.
+- Los datos de esas citas pendientes quedan en el almacenamiento local del navegador hasta enviarse. Esta cola local no está cifrada por Vika; use solo equipos controlados por la clínica, restrinja su acceso y cierre sesión al terminar. HTTPS protege el tránsito, no cifra por sí solo los datos almacenados en el navegador.
 - **Para que la página abra aunque el internet esté caído**, se necesita HTTPS (o `localhost`): los navegadores solo guardan la aplicación para uso sin conexión en sitios seguros. Sin HTTPS, funciona si la página ya estaba abierta cuando se cayó la conexión, pero no si se recarga.
 - Los pacientes necesitan internet (el anticipo se paga en línea).
 

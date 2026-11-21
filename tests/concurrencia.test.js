@@ -38,6 +38,7 @@ describe('mejoras de robustez', () => {
     }
     assert.equal((await cita({ paciente_id: 'abc' })).status, 400);
     assert.equal((await cita({ medico_id: null })).status, 400);
+    const imposible = await cita({ inicio: '2026-02-30T09:00' }); assert.equal(imposible.status, 400); assert.match(imposible.j.error, /fecha u hora no válida/i);
   });
   it('doble clic del mismo paciente: devuelve la misma cita (200), no un falso "ocupada"', async () => {
     const a = await cita(); assert.equal(a.status, 201);

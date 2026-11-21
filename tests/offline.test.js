@@ -45,7 +45,7 @@ describe('sincronizar citas hechas sin internet', () => {
     const misma = await sync({ inicio: fecha(9, '10:00'), paciente: { nombre: 'Niño Pérez', tipo_doc: 'sin_documento' }, decision_paciente_id: r.j.existentes[0].id }); est(misma, 201); assert.equal(misma.j.paciente_id, r.j.existentes[0].id); });
   it('datos inválidos: mensajes claros y nada se guarda', async () => {
     let r = await sync({ inicio: fecha(10, '10:00'), paciente: pac({ documento: '1234567890' }) }); est(r, 422); assert.match(r.j.error, /cédula no es válida/);
-    r = await sync({ cliente_id: 'corto' }); est(r, 400); r = await sync({ medico_id: 999 }); est(r, 400); r = await sync({ inicio: 'mañana' }); est(r, 400);
+    r = await sync({ cliente_id: 'corto' }); est(r, 400); r = await sync({ medico_id: 999 }); est(r, 400); r = await sync({ inicio: 'mañana' }); est(r, 400); r = await sync({ inicio: '2026-02-30T10:00' }); est(r, 400); assert.equal(r.j.estado, 'dato_invalido');
     r = await sync({ medico_id: undefined }); est(r, 400); r = await sync({ inicio: fecha(10, '11:00'), paciente_id: 99999, paciente: undefined }); est(r, 400);
     r = await sync({ inicio: fecha(-1, '10:00') }); est(r, 400); assert.equal(r.j.estado, 'hora_pasada');
     r = await sync({ inicio: fecha(7, '07:00') }); est(r, 400); assert.equal(r.j.estado, 'fuera_de_horario'); });

@@ -36,6 +36,9 @@ async function main() {
   const pin = await esperar(() => q(w, '#vista input[type=password]'), 3000, 'campo PIN'); pin.value = PIN; clic(w, qa(w, '#vista button').find(b => b.textContent === 'Entrar'));
   await esperar(() => !q(w, 'nav').hidden && /¿Qué desea hacer/.test(vista(w)), 8000, 'inicio tras entrar'); paso('entra con PIN y muestra las acciones principales');
   nav(w, 'agendar'); await esperar(() => qa(w, '.hora').length, 8000, 'agenda tras entrar'); paso('abre Agendar cita y carga las horas');
+  const pacientePrueba = await (await mkFetch()('/api/pacientes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nombre: 'Teclado Prueba', tipo_doc: 'cedula', documento: cedula(321) }) })).json(); assert.ok(pacientePrueba.id);
+  const buscarPac = q(w, '#vista input[aria-label="Buscar paciente"]'); escribir(w, buscarPac, 'Teclado'); const opcion = await esperar(() => q(w, '#resultados-paciente [role=option]'), 4000, 'resultado teclado'); opcion.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); assert.equal(opcion.getAttribute('aria-selected'), 'true');
+  paso('selecciona resultado de paciente con Enter y actualiza aria-selected');
   assert.equal(q(w, 'nav [data-v=ajustes]').hidden, false); assert.equal(q(w, 'nav [data-v=pend]').hidden, true); assert.equal(q(w, '#mipin').hidden, false); paso('doctora ve Ajustes; "Sin confirmar" oculto mientras no hay nada');
   await esperar(() => w.localStorage.getItem('vika_agenda'), 5000, 'agenda guardada para trabajar sin internet'); assert.ok(w.localStorage.getItem('vika_cat') && w.localStorage.getItem('vika_yo')); paso('guarda catálogo, identidad y agenda para trabajar sin internet');
   await esperar(() => /Ajustes ⚠/.test(q(w, 'nav [data-v=ajustes]').textContent), 3000, 'aviso de copia externa'); paso('avisa a la doctora que no hay copia externa');
@@ -80,9 +83,9 @@ async function main() {
   const sel = qa(w, '#vista select')[0]; assert.ok(sel.options.length >= 4); paso('lista de médicos para editar horarios');
 
   // ---------- 6. Acceso de pacientes desde recepción
-  nav(w, 'pacientes'); await esperar(() => /Acceso de pacientes/.test(vista(w)), 3000); const busc = qa(w, '#vista input[placeholder*="documento del paciente"]')[0]; escribir(w, busc, 'Elena');
+  nav(w, 'pacientes'); await esperar(() => /Acceso de pacientes/.test(vista(w)), 3000); const busc = qa(w, '#vista input[placeholder*="documento del paciente"]')[0]; escribir(w, busc, 'Teclado');
   await esperar(() => qa(w, '#vista button').some(b => /Activar acceso/.test(b.textContent)), 4000, 'resultado de búsqueda'); clic(w, qa(w, '#vista button').find(b => /Activar acceso/.test(b.textContent)));
-  await esperar(() => /PIN de Elena Torres/.test(vista(w)), 3000); assert.match(q(w, '.codigo').textContent, /^\d{6}$/); paso('recepción activa el acceso de un paciente y ve el PIN una sola vez');
+  await esperar(() => /PIN de Teclado Prueba/.test(vista(w)), 3000); assert.match(q(w, '.codigo').textContent, /^\d{6}$/); paso('recepción activa el acceso de un paciente y ve el PIN una sola vez');
 
   // ---------- 7. Abrir la página SIN internet (equipo que ya trabajó antes)
   const guardado = {}; for (const k of ['vika_yo', 'vika_cat', 'vika_agenda']) guardado[k] = w.localStorage.getItem(k);

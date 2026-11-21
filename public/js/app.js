@@ -17,22 +17,11 @@ function mostrarEstadoRed() {
   o.textContent = yo && yo.rol !== 'paciente' ? 'Sin conexión con el sistema. Puede seguir agendando: las citas quedan SIN CONFIRMAR y se envían solas cuando vuelva el internet.' : 'Sin conexión con el sistema. Lo que escriba no se guardará hasta que vuelva el internet.';
 }
 
-let solicitudesActivas = 0;
-function mostrarProgreso(delta) {
-  solicitudesActivas = Math.max(0, solicitudesActivas + delta);
-  const barra = $('#progreso');
-  if (!barra) return;
-  barra.hidden = solicitudesActivas === 0;
-  barra.setAttribute('aria-label', solicitudesActivas ? 'Vika está comprobando la información' : 'Listo');
-}
-
 async function api(url, cuerpo) {
-  mostrarProgreso(1);
   try {
     const r = await fetch('/api/' + url, cuerpo ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) } : undefined);
     const j = await r.json(); enLinea = true; mostrarEstadoRed(); if (r.status === 401 && yo) { yo = null; login(); } if (Array.isArray(j)) return Object.assign(j, { ok: r.ok, status: r.status }); return { ...j, ok: r.ok, status: r.status };
   } catch { enLinea = false; mostrarEstadoRed(); return { ok: false, sinRed: true, error: 'No hay conexión. No se guardó nada; intente de nuevo cuando vuelva el internet.' }; }
-  finally { mostrarProgreso(-1); }
 }
 let t; function aviso(txt) { const a = $('#aviso'); a.textContent = txt; a.classList.add('ver'); clearTimeout(t); t = setTimeout(() => a.classList.remove('ver'), 5000); }
 const hoy = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
@@ -85,7 +74,7 @@ function agendar() {
   const me = h('select', { id: 'me' }, ...opciones(cat.medicos, x => `${x.nombre} (${x.especialidad})`));
   const fe = h('input', { type: 'date', id: 'fe', min: hoy(), value: hoy() });
   const hs = h('div', { class: 'horas' }), info = h('p', { class: 'suave' }), ok = h('button', { disabled: '' }, pac ? 'Reservar y pagar anticipo' : sinRed ? 'Guardar SIN confirmar' : 'Confirmar cita');
-  const bus = h('input', { placeholder: 'Escriba nombre o documento', 'aria-label': 'Buscar paciente' }), rs = h('div');
+  const bus = h('input', { placeholder: 'Escriba nombre o documento', 'aria-label': 'Buscar paciente', 'aria-autocomplete': 'list', 'aria-controls': 'resultados-paciente' }), rs = h('div', { id: 'resultados-paciente', role: 'listbox', 'aria-label': 'Resultados de pacientes' });
   const acepta = h('input', { type: 'checkbox', 'aria-label': 'Acepto los términos' }); acepta.addEventListener('change', () => estado());
   const fp = { nombre: h('input', { 'aria-label': 'Nombre completo' }), tipo_doc: h('select', {}, h('option', { value: 'cedula' }, 'Cédula'), h('option', { value: 'pasaporte' }, 'Pasaporte'), h('option', { value: 'sin_documento' }, 'Todavía no tiene documento')),
     documento: h('input', { 'aria-label': 'Número de documento' }), telefono: h('input', { type: 'tel', 'aria-label': 'Teléfono' }) };
@@ -117,8 +106,12 @@ function agendar() {
     const r = await api('pacientes?q=' + encodeURIComponent(bus.value));
     if (!Array.isArray(r)) return rs.append(h('p', { class: 'err' }, r.error || ''));
     if (!r.length) rs.append(h('p', { class: 'suave' }, 'No hay pacientes con ese dato. Use "Nuevo paciente" para registrarlo.'));
-    r.forEach(p => { const d = h('div', { class: 'res', tabindex: '0', onclick: () => { paciente = p.id; rs.querySelectorAll('.res').forEach(y => y.classList.remove('sel')); d.classList.add('sel'); estado(); } },
-      h('strong', {}, p.nombre), h('div', { class: 'suave' }, [p.documento, p.nacimiento && 'nac. ' + p.nacimiento].filter(Boolean).join(' · ') || 'Sin documento')); rs.append(d); });
+    r.forEach(p => {
+      const elegir = () => { paciente = p.id; rs.querySelectorAll('.res').forEach(y => { y.classList.remove('sel'); y.setAttribute('aria-selected', 'false'); }); d.classList.add('sel'); d.setAttribute('aria-selected', 'true'); estado(); };
+      const d = h('div', { class: 'res', tabindex: '0', role: 'option', 'aria-selected': 'false', onclick: elegir, onkeydown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); elegir(); } } },
+        h('strong', {}, p.nombre), h('div', { class: 'suave' }, [p.documento, p.nacimiento && 'nac. ' + p.nacimiento].filter(Boolean).join(' · ') || 'Sin documento'));
+      rs.append(d);
+    });
   });
 
   ok.addEventListener('click', async () => {

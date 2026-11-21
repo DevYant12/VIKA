@@ -20,6 +20,12 @@ describe('fecha de nacimiento', () => {
   for (const f of ['2090-01-01', '1700-01-01', '1890-01-01', '1990-13-45', '2023-02-31', '2021-02-29', '20/05/1990', ''])
     test('rechaza ' + (f || 'vacía'), () => assert.equal(V.nacimientoValido(f), false));
 });
+describe('fecha y hora de agenda', () => {
+  for (const f of ['2026-02-30T09:00', '2025-02-29T09:00', '2026-13-01T09:00', '2026-01-01T24:00', '2026-01-01T09:60', '2026-1-01T09:00', 'mañana'])
+    test('rechaza fecha/hora imposible ' + f, () => assert.equal(V.fechaHoraValida(f), false));
+  test('acepta fechas reales, incluido el 29 de febrero bisiesto', () => { assert.equal(V.fechaHoraValida('2024-02-29T09:00'), true); assert.equal(V.fechaHoraValida('2026-11-20T23:59'), true); });
+});
+
 describe('hora de las clínicas', () => {
   test('ahoraLocal usa la zona de Ecuador (UTC-5) sin importar la del computador', () => {
     assert.equal(V.ahoraLocal(Date.UTC(2026, 0, 15, 3, 30)), '2026-01-14T22:30');   // 03:30 UTC = 22:30 del día anterior en Ecuador

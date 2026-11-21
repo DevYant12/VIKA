@@ -77,7 +77,7 @@ async function api(req, res, url) {
   }
   if (p === 'disponibilidad') {
     const c = db.prepare('SELECT * FROM clinicas WHERE id=?').get(q.get('clinica')), f = q.get('fecha') || '';
-    if (!c || !/^\d{4}-\d{2}-\d{2}$/.test(f)) return send(res, 400, { error: 'Elija clínica y fecha.' });
+    if (!c || !V.fechaHoraValida(f + 'T00:00')) return send(res, 400, { error: 'Elija clínica y fecha.' });
     const mid = Number(q.get('medico')) || 0, ocupadas = db.prepare("SELECT substr(inicio,12,5) h FROM citas WHERE medico_id=? AND estado='agendada' AND substr(inicio,1,10)=?").all(mid, f).map(x => x.h);
     return send(res, 200, H.horas(c, mid, f).map(h => ({ hora: h, libre: !ocupadas.includes(h) && (f + 'T' + h) > ahora() })));
   }
@@ -95,7 +95,7 @@ async function api(req, res, url) {
     const c = db.prepare('SELECT * FROM clinicas WHERE id=?').get(b.clinica_id);
     if (!c || !db.prepare('SELECT 1 FROM medicos WHERE id=? AND activo=1').get(b.medico_id) || !db.prepare('SELECT 1 FROM pacientes WHERE id=?').get(b.paciente_id))
       return send(res, 400, { error: 'Falta elegir clínica, médico o paciente.' });
-    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(b.inicio || '')) return send(res, 400, { error: 'Fecha u hora no válida.' });
+    if (!V.fechaHoraValida(b.inicio)) return send(res, 400, { error: 'Fecha u hora no válida.' });
     if (b.inicio <= ahora()) return send(res, 400, { error: 'Esa fecha y hora ya pasaron. Elija una hora futura.' });
     if (!H.horas(c, b.medico_id, b.inicio.slice(0, 10)).includes(b.inicio.slice(11))) return send(res, 400, { error: H.explicar(c, db.prepare('SELECT * FROM medicos WHERE id=?').get(b.medico_id), b.inicio.slice(0, 10)) });
     try {
@@ -122,7 +122,7 @@ async function api(req, res, url) {
     const cita = db.prepare("SELECT * FROM citas WHERE id=? AND estado='agendada'").get(rp[1]);
     if (!cita) return send(res, 404, { error: 'No existe una cita activa con ese número.' });
     const inicio = String(b.inicio || ''), medicoId = Number(b.medico_id), clinicaId = Number(b.clinica_id);
-    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(inicio) || !Number.isInteger(medicoId) || !Number.isInteger(clinicaId))
+    if (!V.fechaHoraValida(inicio) || !Number.isInteger(medicoId) || !Number.isInteger(clinicaId))
       return send(res, 400, { error: 'Elija una fecha, hora, clínica y médico válidos.' });
     if (inicio <= ahora()) return send(res, 400, { error: 'No se puede reprogramar a una fecha u hora pasada.' });
     const clinica = db.prepare('SELECT * FROM clinicas WHERE id=?').get(clinicaId), medico = db.prepare('SELECT * FROM medicos WHERE id=? AND activo=1').get(medicoId);

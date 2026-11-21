@@ -14,6 +14,15 @@ function cedulaValida(c) {
   return (10 - (suma % 10)) % 10 === +c[9];
 }
 
+function fechaHoraValida(f) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(f || '');
+  if (!m) return false;
+  const [y, mo, d, h, mi] = m.slice(1).map(Number);
+  if (h > 23 || mi > 59) return false;
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === mo - 1 && dt.getUTCDate() === d;
+}
+
 const telefonoValido = t => /^(09\d{8}|0[2-7]\d{7})$/.test(t);
 const emailValido = e => /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/.test(e);
 
@@ -37,4 +46,4 @@ function nacimientoValido(f) {
   return f >= lim;
 }
 
-module.exports = { normalizar, limpiar, cedulaValida, telefonoValido, emailValido, nacimientoValido, ahoraLocal, ZONA };
+module.exports = { normalizar, limpiar, cedulaValida, telefonoValido, emailValido, nacimientoValido, fechaHoraValida, ahoraLocal, ZONA };

@@ -3,7 +3,7 @@
 Aquí está lo que decidí para el sistema de la Dra. Paredes, por qué, y lo que **no** resolví. Prefiero decir "esto falta" antes que fingir que todo está resuelto.
 
 **Cómo leer este archivo:** cada pregunta de las bases tiene su respuesta, con una etiqueta: ✅ resuelto y probado · 🟡 resuelto a medias · ❌ no resuelto (con lo que haría).
-Las pruebas automáticas (`npm test`, 195) respaldan casi todo lo marcado ✅; entre paréntesis dejo el archivo de pruebas.
+Los resultados vigentes de las pruebas automáticas se registran en README después de ejecutarlas; entre paréntesis dejo el archivo de pruebas.
 
 ---
 
@@ -107,11 +107,11 @@ Pidió: los pacientes agendan ellos mismos tras entrar con su cuenta, pagan un a
 - **El pago es SIMULADO.** Un botón lo marca como pagado. Con un proveedor real (PayPhone, Stripe…) debe confirmarse con el aviso del proveedor, nunca con lo que diga el navegador. Nunca se guardan datos de tarjeta.
 - **Riesgo legal que no puedo resolver:** no soy abogado. La Ley Orgánica de Defensa del Consumidor regula los contratos de adhesión y declara nulas ciertas cláusulas abusivas; no encontré norma que diga expresamente si un anticipo no reembolsable para una cita médica es válido. **Hay que revisarlo con un abogado antes de cobrar.** Por eso dejé las tres salidas (devolución por clínica/emergencia, texto claro antes de pagar, ventana de devolución por variable).
 
-## 10. Mejoras implementadas en Vika 1.0
+## 10. Correcciones y mejoras de esta rama de prueba
 1. **Reprogramación:** `POST /api/citas/:id/reprogramar` comprueba fecha futura, médico, clínica y horario; actualiza la cita dentro de una transacción SQLite y conserva el anticipo. La restricción única del médico y hora protege las carreras entre recepcionistas. Cada cambio queda en `reprogramaciones` y en auditoría. ✅ (`tests/reprogramar.test.js`)
 2. **Historial desde la interfaz:** «Buscar paciente» permite abrir las citas activas y canceladas y los cambios de horario. La API no expone este historial a pacientes. ✅
 3. **Recepción fácil:** inicio con cuatro acciones grandes, ayuda contextual sin Internet, navegación de teclado y tamaño de letra por usuario. ✅ implementado; 🟡 pendiente de observar a una persona no técnica.
-4. **Pruebas:** la suite automática pasó con **195 pruebas** y la prueba UI pasó con **26 comprobaciones** después de instalar `jsdom` solo para esa prueba.
+4. **Pruebas:** `npm test` pasó con 202 pruebas y `npm run test:ui` con 27 comprobaciones en esta rama de prueba. La prueba con persona no técnica continúa pendiente; no se debe inferir de las pruebas automáticas.
 
 ## 11. Lo que NO resolví (y cómo lo haría)
 1. **Probar con una persona no técnica** (doña Rosa). Haría 3 tareas cronometradas sin ayuda y arreglaría donde se trabe. Guion en `docs/PRUEBA-USUARIO.md`.
@@ -129,5 +129,4 @@ Usé IA para escribir y revisar código y pruebas. Antes de pedirle nada leí la
 ## 13. Control de versiones y datos sensibles
 - El repositorio no contiene datos reales, contraseñas ni llaves: `.gitignore` excluye `*.db`, copias (`backups/`), `.env` y `node_modules/`. El PIN inicial de la doctora se **genera al arrancar** y solo se muestra en la terminal.
 - Los datos de `datos-ejemplo/` son inventados.
-- Historial: ver `README.md` (sección *Historial del repositorio y estado de Vika 1.0*) para una descripción honesta de cómo se construyó. Soy el único integrante y los commits del repositorio real usan mi autor `Royant <ciadoyant@gmail.com>`.
-- Estado actual: Vika 1.0 sigue en desarrollo. La etiqueta `entrega-final` todavía no existe y solo se creará cuando termine la revisión del concurso.
+- Historial: ver `README.md` (sección *Historial del repositorio*) para una descripción honesta de cómo se construyó.
