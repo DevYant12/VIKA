@@ -59,7 +59,7 @@ Con el cambio de planes apareció otra: cancelar es fácil, pero ahora **cuesta*
 ## 4. Sobre el uso real
 | Pregunta | Qué hace el sistema | Estado |
 |---|---|---|
-| ¿Podría doña Rosa usarlo sin ayuda? ¿Se probó? | Diseñado para ella: 3 pantallas principales (agendar, citas del día, nuevo paciente), letra grande, botones amplios, pasos numerados. **Pero no lo probé con una persona no técnica.** Dejé `docs/PRUEBA-USUARIO.md` con el guion y la hoja para anotar qué pasó. Lo primero que haría con más tiempo. | ❌ (probar) |
+| ¿Podría doña Rosa usarlo sin ayuda? ¿Se probó? | En la prueba inicial una persona confundió crear cuenta con entrar; se aclaró la pantalla. En la prueba posterior reportada, la persona pudo usarlo como cliente sin problemas. Esto no demuestra el flujo de recepción ni que se haya probado con doña Rosa; falta completar las cinco tareas del guion. Ver `docs/PRUEBA-USUARIO.md`. | 🟡 (prueba de cliente positiva; recepción pendiente) |
 | ¿El mensaje de error sirve a una persona normal? | Todos los errores dicen qué pasó y qué hacer ("La cédula no es válida. Debe tener 10 números; revise que no falte ni sobre ninguno"). Un error interno del sistema dice "Algo salió mal… intente de nuevo; si sigue igual, avise a soporte", sin códigos. | ✅ |
 | Botón equivocado: ¿se puede deshacer? | Cancelar pide confirmación y se puede **Reactivar**. Registrar un paciente por error no borra nada peligroso (se puede ignorar). **Límite:** reactivar falla si otra persona ya tomó esa hora, y lo explica. | 🟡 |
 | ¿Celular, letra pequeña, poca luz? | Diseño adaptable a celular, letra grande, **modo oscuro** automático (sigue la configuración del teléfono) y campos con etiquetas para lectores de pantalla. **No medí el contraste ni lo probé con poca luz real.** | ✅ |
@@ -102,7 +102,7 @@ Pidió: los pacientes agendan ellos mismos tras entrar con su cuenta, pagan un a
 - Debe leer y **marcar** los términos; se guarda **qué versión** aceptó y **cuándo**.
 - La hora queda apartada **15 minutos** mientras paga; si no paga, se libera sola.
 - Si cancela con el anticipo pagado, queda **retenido** y se le avisa **antes** de confirmar. Si no había pagado, cancelar es gratis.
-- Monto y plazos por variables: `VIKA_ANTICIPO` ($5), `VIKA_MINUTOS_PAGO` (15), `VIKA_HORAS_REEMBOLSO` (0 = nunca).
+- Monto y plazos por variables: `VIKA_ANTICIPO` ($10 por defecto), `VIKA_MINUTOS_PAGO` (15), `VIKA_HORAS_REEMBOLSO` (0 = nunca). La tarifa nueva usa versión de términos 1.1.
 - El anticipo se devuelve completo si cancela la clínica o hay emergencia (solo la doctora, y queda anotado).
 - **El pago es SIMULADO.** Un botón lo marca como pagado. Con un proveedor real (PayPhone, Stripe…) debe confirmarse con el aviso del proveedor, nunca con lo que diga el navegador. Nunca se guardan datos de tarjeta.
 - **Riesgo legal que no puedo resolver:** no soy abogado. La Ley Orgánica de Defensa del Consumidor regula los contratos de adhesión y declara nulas ciertas cláusulas abusivas; no encontré norma que diga expresamente si un anticipo no reembolsable para una cita médica es válido. **Hay que revisarlo con un abogado antes de cobrar.** Por eso dejé las tres salidas (devolución por clínica/emergencia, texto claro antes de pagar, ventana de devolución por variable).
@@ -110,11 +110,11 @@ Pidió: los pacientes agendan ellos mismos tras entrar con su cuenta, pagan un a
 ## 10. Correcciones y mejoras de esta rama de prueba
 1. **Reprogramación:** `POST /api/citas/:id/reprogramar` comprueba fecha futura, médico, clínica y horario; actualiza la cita dentro de una transacción SQLite y conserva el anticipo. La restricción única del médico y hora protege las carreras entre recepcionistas. Cada cambio queda en `reprogramaciones` y en auditoría. ✅ (`tests/reprogramar.test.js`)
 2. **Historial desde la interfaz:** «Buscar paciente» permite abrir las citas activas y canceladas y los cambios de horario. La API no expone este historial a pacientes. ✅
-3. **Recepción fácil:** inicio con cuatro acciones grandes, ayuda contextual sin Internet, navegación de teclado y tamaño de letra por usuario. ✅ implementado; 🟡 pendiente de observar a una persona no técnica.
-4. **Pruebas:** `npm test` pasó con 202 pruebas y `npm run test:ui` con 27 comprobaciones en esta rama de prueba. La prueba con persona no técnica continúa pendiente; no se debe inferir de las pruebas automáticas.
+3. **Recepción fácil:** inicio con cuatro acciones grandes, ayuda contextual sin Internet, navegación de teclado y tamaño de letra por usuario. La prueba con perfil de cliente se reportó sin problemas tras aclarar el acceso; queda pendiente validar la recepción con las cinco tareas del guion.
+4. **Pruebas:** `npm test` pasó con 202 pruebas y `npm run test:ui` con 28 comprobaciones, incluida la pantalla de acceso.
 
 ## 11. Lo que NO resolví (y cómo lo haría)
-1. **Probar con una persona no técnica** (doña Rosa). Haría 3 tareas cronometradas sin ayuda y arreglaría donde se trabe. Guion en `docs/PRUEBA-USUARIO.md`.
+1. **Completar una prueba con una persona en rol de recepción** (idealmente doña Rosa): realizar las cinco tareas cronometradas sin ayuda y registrar fecha, dispositivo y resultados en `docs/PRUEBA-USUARIO.md`. La prueba reportada hasta ahora fue como cliente.
 2. **Pago real del anticipo** (proveedor + confirmación por webhook).
 3. **Verificación en dos pasos.** Un PIN de 6 números es una barrera modesta frente a alguien con acceso físico al equipo.
 4. **Recordatorios por mensaje y lista de espera.**
@@ -122,6 +122,7 @@ Pidió: los pacientes agendan ellos mismos tras entrar con su cuenta, pagan un a
 6. **Confirmar que un teléfono existe** (mensaje de prueba).
 7. **Que la doctora configure y pruebe la copia externa.** Es lo único que no puedo garantizar yo.
 8. **Recordatorios y lista de espera** requieren diseño adicional e integraciones o proceso operativo.
+9. **Recuperación autónoma del PIN olvidado:** no me dio tiempo de terminar un flujo de autoservicio seguro. Por ahora el paciente debe pedir ayuda a recepción: verificar su identidad en persona y usar «PIN nuevo» para emitir uno de un solo uso; el anterior queda inválido y el paciente puede cambiar el nuevo desde «Mi PIN». A futuro implementaría recuperación autoservicio con un canal previamente verificado, código temporal de un solo uso, límites de intentos y auditoría. No se añadió esa funcionalidad.
 
 ## 12. Uso de inteligencia artificial
 Usé IA para escribir y revisar código y pruebas. Antes de pedirle nada leí la historia, listé las preocupaciones y decidí las reglas (qué pasa con cada pregunta); después la usé para implementarlas y para buscar casos que se me escapaban (por ejemplo, el "31 de febrero" y la dependencia de la zona horaria salieron de revisar el código con mirada crítica). Cada parte del sistema está cubierta por pruebas y debo poder explicarla en la defensa.
@@ -129,4 +130,5 @@ Usé IA para escribir y revisar código y pruebas. Antes de pedirle nada leí la
 ## 13. Control de versiones y datos sensibles
 - El repositorio no contiene datos reales, contraseñas ni llaves: `.gitignore` excluye `*.db`, copias (`backups/`), `.env` y `node_modules/`. El PIN inicial de la doctora se **genera al arrancar** y solo se muestra en la terminal.
 - Los datos de `datos-ejemplo/` son inventados.
-- Historial: ver `README.md` (sección *Historial del repositorio*) para una descripción honesta de cómo se construyó.
+- **Error de Git que reconozco:** por no saber manejar bien las ramas y el estado del repositorio, trabajé temporalmente en una copia local de respaldo llamada `main`, no comprobé que no era la rama enlazada a GitHub y dejé allí cambios sin confirmar. Al principio confundí esa copia con el historial remoto. Debí revisar `git status`, `git branch -vv` y `git log --all` antes de continuar. La rama enlazada al remoto y usada para el cierre es `subida-para-prueba-con-persona`; conserva commits reales del 17, 19 y 20 de noviembre con autorías `Royant` y `DevYant12`. No falsifiqué fechas ni autores ni reescribí esa historia; registré las correcciones finales en un commit real.
+- Historial completo y pasos de cierre: ver `README.md` (sección *Historial del repositorio*).

@@ -277,10 +277,10 @@ const irA = v => document.querySelector(`[data-v=${v}]`).click();
 
 async function login() {
   $('nav').hidden = true; $('#sesion').hidden = true;
-  const us = await api('auth/usuarios'), caja = h('section', {}, h('h2', {}, '¿Quién es usted?'));
+  const us = await api('auth/usuarios'), caja = h('section', {}, h('h2', {}, 'Acceso del personal'), h('p', { class: 'suave' }, 'Doctora y recepción: seleccione su nombre para entrar con su PIN.'));
   if (!Array.isArray(us)) caja.append(h('p', { class: 'err' }, us.sinRed ? 'No hay conexión con el sistema. Para entrar por primera vez en este equipo hace falta internet.' : us.error));
   else us.forEach(x => caja.append(h('p', {}, h('button', { class: 'sec', style: 'width:100%', onclick: () => pedirPin(x) }, x.nombre))));
-  $('#vista').replaceChildren(caja, seccionPaciente());
+  $('#vista').replaceChildren(seccionPaciente(), caja);
 }
 function pedirPin(x) {
   const pin = campoPin('PIN de 6 números');
@@ -372,8 +372,8 @@ async function misCitas() {
         if (!confirm(txt)) return; const x = await api(`citas/${c.id}/cancelar`, {}); aviso(x.ok ? 'Cita cancelada.' : x.error); misCitas(); } }, 'Cancelar')) : '')));
   $('#vista').replaceChildren(h('section', {}, h('h2', {}, 'Mis citas'), lista));
 }
-const seccionPaciente = () => h('section', {}, h('h2', {}, '¿Es paciente?'), h('p', { class: 'suave' }, 'Entre para agendar su cita usted mismo.'),
-  h('button', { onclick: () => formPaciente(false) }, 'Entrar como paciente'), ' ', h('button', { class: 'sec', onclick: () => formPaciente(true) }, 'Crear mi cuenta'));
+const seccionPaciente = () => h('section', {}, h('h2', {}, 'Acceso para pacientes'), h('p', { class: 'suave' }, '¿Es su primera vez? Cree una cuenta. Si ya creó una, entre con su cédula o pasaporte y su PIN.'),
+  h('button', { onclick: () => formPaciente(true) }, 'Soy paciente nuevo · Crear cuenta'), ' ', h('button', { class: 'sec', onclick: () => formPaciente(false) }, 'Ya tengo cuenta · Entrar'));
 function formPaciente(registro) {
   const campos = registro ? [['nombre', 'Nombre completo', 'text'], ['tipo_doc', 'Documento', 'select'], ['documento', 'Número de documento', 'text'], ['telefono', 'Celular (opcional)', 'tel'],
     ['nacimiento', 'Fecha de nacimiento (opcional)', 'date'], ['pin', 'Cree un PIN de 6 números', 'password'], ['pin2', 'Repita el PIN', 'password']]

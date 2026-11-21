@@ -23,4 +23,9 @@ Antes de comenzar, preparar datos inventados, una sesión de recepción y una ag
 
 Al finalizar, preguntar: «¿Qué palabra no entendió?», «¿Qué botón le dio miedo pulsar?», «¿Qué esperaba que ocurriera?», «¿Se lee bien en el celular?» y «¿Qué cambiaría primero?». Guardar fecha, dispositivo, navegador, duración total y observaciones del moderador.
 
-> **Resultado real: pendiente.** El sistema está preparado para la prueba, pero todavía no se afirma que una persona concreta la haya realizado ni que la haya superado.
+## Registro de la prueba de acceso como cliente
+En la primera prueba la persona no entendió que debía crear una cuenta y confundió el acceso con «Entrar». Se cambió la pantalla para separar y priorizar «Soy paciente nuevo · Crear cuenta» y «Ya tengo cuenta · Entrar», con acceso del personal aparte. En una prueba posterior, después de esa corrección, el equipo reporta que la persona pudo usar Vika como cliente sin problemas.
+
+No se reportaron fecha exacta, dispositivo, navegador, duración ni tareas concretas; por eso no se rellenan las filas de las cinco tareas de recepción de arriba ni se afirma que se probara con doña Rosa. La prueba automatizada de interfaz verifica el orden de los botones, pero no se cuenta como prueba humana.
+
+> **Resultado:** el acceso de cliente se probó de nuevo y fue reportado sin problemas. Queda pendiente completar las cinco tareas del guion con una persona en rol de recepción y registrar los datos de la sesión.

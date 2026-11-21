@@ -32,6 +32,9 @@ async function main() {
   // ---------- 1. Entrar como doctora
   const dom = await abrir(), w = dom.window;
   await esperar(() => qa(w, '#vista button').some(b => /Paredes/.test(b.textContent)), 8000, 'pantalla de acceso'); paso('carga la pantalla de acceso');
+  assert.match(vista(w), /Soy paciente nuevo · Crear cuenta[\s\S]*Ya tengo cuenta · Entrar[\s\S]*Acceso del personal/);
+  assert.ok(qa(w, '#vista button')[0].textContent.includes('Soy paciente nuevo'));
+  paso('prioriza el registro de pacientes y distingue crear cuenta de entrar con cuenta existente');
   clic(w, qa(w, '#vista button').find(b => /Paredes/.test(b.textContent)));
   const pin = await esperar(() => q(w, '#vista input[type=password]'), 3000, 'campo PIN'); pin.value = PIN; clic(w, qa(w, '#vista button').find(b => b.textContent === 'Entrar'));
   await esperar(() => !q(w, 'nav').hidden && /¿Qué desea hacer/.test(vista(w)), 8000, 'inicio tras entrar'); paso('entra con PIN y muestra las acciones principales');

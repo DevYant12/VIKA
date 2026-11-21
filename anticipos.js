@@ -1,5 +1,5 @@
 // Anticipo y términos para citas agendadas por el propio paciente
-const ANTICIPO = Number(process.env.VIKA_ANTICIPO || 5);                    // dólares
+const ANTICIPO = Number(process.env.VIKA_ANTICIPO || 10);                   // dólares
 const HORAS_REEMBOLSO = Number(process.env.VIKA_HORAS_REEMBOLSO || 0);      // 0 = nunca se devuelve al cancelar el paciente
 const MINUTOS_PAGO = Number(process.env.VIKA_MINUTOS_PAGO || 15);           // tiempo para pagar antes de soltar la hora
 
@@ -12,7 +12,7 @@ function terminos() {
       : 'Si usted cancela o no asiste a su cita, el anticipo no se devuelve.',
     'Si la clínica o el médico cancelan, o hay una emergencia comprobada, el anticipo se devuelve completo.',
     'En este sistema no se guardan datos de su tarjeta. Sus datos de salud se usan solo para gestionar su atención.'];
-  return { version: '1.0', anticipo: ANTICIPO, minutos_para_pagar: MINUTOS_PAGO, horas_reembolso: HORAS_REEMBOLSO, reglas };
+  return { version: '1.1', anticipo: ANTICIPO, minutos_para_pagar: MINUTOS_PAGO, horas_reembolso: HORAS_REEMBOLSO, reglas };
 }
 // Qué pasa con un anticipo pagado cuando el paciente cancela
 const destinoAnticipo = (inicio, ahora, horas = HORAS_REEMBOLSO) =>

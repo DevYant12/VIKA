@@ -24,12 +24,12 @@ Al arrancar, la terminal muestra el **PIN inicial** de la Dra. Paredes. Abra htt
 
 ## Pruebas
 `npm test` pasó: 202 pruebas, 0 fallos. Incluye validación calendario estricta y pruebas de citas, reprogramación y sincronización offline.
-`npm run test:ui` pasó con 27 comprobaciones del flujo de interfaz (incluida selección por teclado), usando `jsdom` instalada mediante `npm ci`.
+`npm run test:ui` pasó con 28 comprobaciones del flujo de interfaz (incluidas selección por teclado y claridad de crear cuenta/entrar), usando `jsdom` instalada mediante `npm ci`.
 
 ## Interfaz de recepción fácil
 Después de entrar como personal aparece un inicio con cuatro acciones grandes: **Agendar cita**, **Consultar citas**, **Registrar paciente** y **Buscar paciente**. La agenda permite reprogramar una cita con comprobación de disponibilidad real; el cambio se hace de forma atómica, conserva el anticipo y queda en el historial de auditoría. Desde Buscar paciente se puede abrir el historial administrativo de citas y anticipos, sin mostrar información médica innecesaria.
 
-La ayuda contextual funciona sin Internet desde «¿Necesitas ayuda?». El tamaño de letra se puede guardar por usuario como Normal, Grande o Muy grande. Estas mejoras están implementadas y cubiertas por las pruebas automáticas; la prueba con una persona no técnica sigue pendiente de realizarse en condiciones reales.
+La ayuda contextual funciona sin Internet desde «¿Necesitas ayuda?». El tamaño de letra se puede guardar por usuario como Normal, Grande o Muy grande. En una prueba exploratoria, una persona confundió crear cuenta con entrar; se aclaró la pantalla. En la prueba posterior reportada, la persona pudo usar el sistema como cliente sin problemas. Esto no sustituye la prueba completa del flujo de recepción con doña Rosa ni el registro de todas las tareas: ver `docs/PRUEBA-USUARIO.md`.
 
 ## Seguridad y publicación
 Por defecto Vika **solo escucha en este computador**. Para usarla desde las clínicas hay que ponerle HTTPS: ver `docs/PUBLICAR.md` (también explica las copias externas cifradas y el trabajo sin internet).
@@ -41,12 +41,12 @@ GitHub debe alojar el repositorio y su historial; `.github/workflows/test.yml` e
 Ver el estado de las copias y hacer una al momento · definir el horario de cada médico en cada clínica y el horario general de cada clínica · activar o desactivar médicos · **importar** pacientes, médicos y horarios desde Excel (primero se revisa sin guardar). Recepción puede **activar el acceso** de un paciente ya registrado o darle un PIN nuevo (pestaña Nuevo paciente).
 
 ## Pacientes y anticipo
-Los pacientes crean su cuenta, aceptan los términos y pagan un anticipo (pago **simulado**). Se configura con variables: `VIKA_ANTICIPO` (dólares, 5 por defecto), `VIKA_MINUTOS_PAGO` (15) y `VIKA_HORAS_REEMBOLSO` (0 = nunca se devuelve).
+En el primer ingreso, los pacientes distinguen **Soy paciente nuevo · Crear cuenta** de **Ya tengo cuenta · Entrar**. Aceptan los términos y pagan un anticipo de **$10** (pago **simulado**). Se configura con variables: `VIKA_ANTICIPO` (dólares, 10 por defecto), `VIKA_MINUTOS_PAGO` (15) y `VIKA_HORAS_REEMBOLSO` (0 = nunca se devuelve).
 
 ## Zona horaria
 Las clínicas usan la hora de Ecuador continental (`America/Guayaquil`, sin cambio de hora) **sin importar la zona del computador**. Para Galápagos: `VIKA_TZ=Pacific/Galapagos`.
 
 ## Historial del repositorio
-Este repositorio **empezó con una versión del sistema que ya existía**, importada en el primer commit (`Importar versión existente de Vika`); por eso el historial anterior a esa fecha no está. Lo hecho después, para cumplir las bases, va en commits separados (cada uno dice qué y por qué). Cada integrante debe hacer sus propios commits desde ahora y poder explicarlos.
+Este repositorio **empezó con una versión del sistema que ya existía**, importada en el primer commit; por eso el historial anterior no está. La rama `subida-para-prueba-con-persona` conserva la historia real enlazada a GitHub, con commits fechados el 17, 19 y 20 de noviembre y autorías de `Royant` y `DevYant12`. Durante el cierre me equivoqué al trabajar temporalmente en una copia local `main` de respaldo sin revisar rama/upstream y dejé cambios sin commit; al principio confundí el historial de esa copia con el del repositorio remoto. Fue un error por no saber usar Git con suficiente cuidado. No se reescribieron ni inventaron fechas o autores; para la entrega se usa la rama enlazada al remoto y se agrega un commit real con los cambios de cierre.
 
-**Estado:** rama de prueba `subida-para-prueba-con-persona`; no es entrega final. La prueba con una persona no técnica sigue pendiente. No se crea etiqueta ni se publica en `main`.
+**Cierre:** después de revisar el estado limpio y las pruebas, la etiqueta `entrega-final` debe apuntar al commit de cierre de `subida-para-prueba-con-persona`. La etiqueta es la versión que se entrega; no reescribir el historial ni crear commits posteriores que cambien lo presentado.
