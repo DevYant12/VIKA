@@ -55,7 +55,7 @@
   }
   // Acciones de la recepcionista sobre una cita con problema
   function mutar(store, id, f) { const cola = leer(store), it = cola.find(x => x.cliente_id === id); if (!it) return null; f(it); guardar(store, cola); return it; }
-  const reprogramar = (store, id, inicio) => mutar(store, id, it => { it.inicio = inicio; it.estado = 'pendiente'; it.mensaje = null; it.alternativas = null; it.intentos = 0; });
+  const elegirHora = (store, id, inicio) => mutar(store, id, it => { it.inicio = inicio; it.estado = 'pendiente'; it.mensaje = null; it.alternativas = null; it.intentos = 0; });
   const decidir = (store, id, d) => mutar(store, id, it => { if (d.paciente_id) it.decision_paciente_id = d.paciente_id; else it.decision = 'otra'; it.estado = 'pendiente'; it.mensaje = null; it.existentes = null; });
   const reintentar = (store, id) => mutar(store, id, it => { it.estado = 'pendiente'; it.mensaje = null; it.intentos = 0; });
   const descartar = (store, id) => guardar(store, leer(store).filter(x => x.cliente_id !== id));
@@ -77,6 +77,6 @@
     return '';
   }
 
-  const API = { cedulaValida, validarPaciente, KC, KA, leer, guardar, encolar, libres, sincronizar, reprogramar, decidir, reintentar, descartar, resumen, aplicar, ahoraLocal };
+  const API = { cedulaValida, validarPaciente, KC, KA, leer, guardar, encolar, libres, sincronizar, elegirHora, decidir, reintentar, descartar, resumen, aplicar, ahoraLocal };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else raiz.Cola = API;
 })(typeof window !== 'undefined' ? window : globalThis);

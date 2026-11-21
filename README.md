@@ -23,11 +23,11 @@ Al arrancar, la terminal muestra `Vika lista en http://127.0.0.1:3000` y el **PI
 - `datos-ejemplo/` archivos inventados para probar la importación
 
 ## Pruebas
-`npm test` pasó: 202 pruebas, 0 fallos. Incluye validación calendario estricta y pruebas de citas, reprogramación y sincronización offline.
+`npm test` pasó: 202 pruebas, 0 fallos. Incluye validación de calendario estricta y pruebas de citas, cancelación/reactivación y sincronización offline.
 `npm run test:ui` pasó con 28 comprobaciones del flujo de interfaz (incluidas selección por teclado y claridad de crear cuenta/entrar), usando `jsdom` instalada mediante `npm ci`.
 
 ## Interfaz de recepción fácil
-Después de entrar como personal aparece un inicio con cuatro acciones grandes: **Agendar cita**, **Consultar citas**, **Registrar paciente** y **Buscar paciente**. La agenda permite reprogramar una cita con comprobación de disponibilidad real; el cambio se hace de forma atómica, conserva el anticipo y queda en el historial de auditoría. Desde Buscar paciente se puede abrir el historial administrativo de citas y anticipos, sin mostrar información médica innecesaria.
+Después de entrar como personal aparece un inicio con cuatro acciones grandes: **Agendar cita**, **Consultar citas**, **Registrar paciente** y **Buscar paciente**. Desde la agenda se puede cancelar una cita con confirmación y reactivarla si la hora sigue libre. Desde Buscar paciente se puede abrir el historial administrativo de citas y anticipos, sin mostrar información médica innecesaria.
 
 La ayuda contextual funciona sin Internet desde «¿Necesitas ayuda?». El tamaño de letra se puede guardar por usuario como Normal, Grande o Muy grande. En una prueba exploratoria, una persona confundió crear cuenta con entrar; se aclaró la pantalla. En la prueba posterior reportada, la persona pudo usar el sistema como cliente sin problemas. Esto no sustituye la prueba completa del flujo de recepción con doña Rosa ni el registro de todas las tareas: ver `docs/PRUEBA-USUARIO.md`.
 

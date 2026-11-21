@@ -29,12 +29,6 @@ CREATE TABLE IF NOT EXISTS respaldos(
   id INTEGER PRIMARY KEY, cuando TEXT DEFAULT CURRENT_TIMESTAMP, archivo TEXT, bytes INTEGER, local_ok INTEGER NOT NULL DEFAULT 0,
   extra_config INTEGER NOT NULL DEFAULT 0, extra_ok INTEGER, cifrado INTEGER NOT NULL DEFAULT 0, mismo_disco INTEGER NOT NULL DEFAULT 0, error TEXT);
 CREATE TABLE IF NOT EXISTS sesiones_pac(token TEXT PRIMARY KEY, cuenta_id INTEGER NOT NULL REFERENCES cuentas(id), expira INTEGER NOT NULL);
-CREATE TABLE IF NOT EXISTS reprogramaciones(
-  id INTEGER PRIMARY KEY, cita_id INTEGER NOT NULL REFERENCES citas(id),
-  inicio_anterior TEXT NOT NULL, medico_anterior INTEGER NOT NULL, clinica_anterior INTEGER NOT NULL,
-  inicio_nuevo TEXT NOT NULL, medico_nuevo INTEGER NOT NULL, clinica_nueva INTEGER NOT NULL,
-  quien TEXT NOT NULL, cuando TEXT DEFAULT CURRENT_TIMESTAMP
-);
 `);
 // Migración: bases creadas con la versión anterior
 for (const c of ['pin_hash TEXT', 'intentos INTEGER NOT NULL DEFAULT 0', 'bloqueado_hasta INTEGER NOT NULL DEFAULT 0'])
