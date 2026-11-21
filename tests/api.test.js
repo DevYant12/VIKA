@@ -95,8 +95,8 @@ describe('pacientes con cuenta, términos y anticipo', () => {
     for (const r of ['pacientes?q=a', 'citas?fecha=2099-01-01', 'usuarios', 'auditoria']) est(await S.llamar(r, null, ckP), 403);
     est(await S.llamar('citas/1/reactivar', {}, ckP), 403); est(await S.llamar('auth/pin', { actual: 'x', nuevo: '482913' }, ckP), 400); });
   it('no deja agendar sin aceptar los términos', async () => { const r = await reservar({ acepta_terminos: false }); est(r, 400); assert.match(r.j.error, /términos/); });
-  it('agenda con términos: queda por pagar y la hora se aparta', async () => {
-    const r = await reservar(); est(r, 201); citaP = r.j.id; assert.equal(r.j.anticipo, 'pendiente'); assert.equal(r.j.monto, 5);
+  it('agenda con términos: anticipo de $10 por pagar y la hora se aparta', async () => {
+    const r = await reservar(); est(r, 201); citaP = r.j.id; assert.equal(r.j.anticipo, 'pendiente'); assert.equal(r.j.monto, 10);
     est(await nuevaCita({ medico_id: 4, inicio: fecha(5) }), 409); });
   it('no puede agendar a nombre de otra persona; cancelar sin pagar no cuesta', async () => {
     const r = await reservar({ inicio: fecha(5, '11:00'), paciente_id: juan }); est(r, 201);

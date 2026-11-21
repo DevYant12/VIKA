@@ -14,7 +14,8 @@
 | 9–10 | Importar `datos-ejemplo/` (Revisar sin guardar) | El sistema decide qué hacer con datos sucios. |
 
 ## Preguntas probables y respuesta honesta
-- **¿Lo probaron con doña Rosa?** No. Está el guion en `docs/PRUEBA-USUARIO.md` y es lo primero que haríamos.
+- **¿Lo probaron con doña Rosa?** Una persona se confundió al crear cuenta; aclaramos la pantalla y luego reportó que pudo usar Vika como cliente sin problemas. No afirmamos que fuera doña Rosa ni que ya se completara la prueba de recepción de cinco tareas. Está registrada en `docs/PRUEBA-USUARIO.md`.
+- **¿Qué pasa si se olvida el PIN?** Hoy puede pedir ayuda a recepción, que verifica su identidad en persona y le genera un PIN nuevo de un solo uso; el anterior queda invalidado. No terminé un proceso de recuperación autónoma por falta de tiempo. Lo haría con un código temporal enviado a un canal previamente verificado, límites de intentos y auditoría.
 - **¿Qué falta?** Pago real, doble verificación, segundo administrador delegado, recordatorios y lista de espera. La reprogramación y el botón de historial ya están implementados y probados. Todo lo pendiente está en DECISIONES §11.
 - **¿Por qué gana la primera que sincroniza?** Los relojes de cada computador pueden diferir; es la única regla que no depende de ellos. Nada se pierde en silencio.
 - **¿Qué pasa si se borra todo?** Copias cada 6 h, verificadas; copia externa cifrada opcional; `npm run restaurar`. Límite: alguien debe configurarla y probarla.
