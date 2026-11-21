@@ -48,12 +48,7 @@ async function api(req, res, url) {
     const pa = db.prepare('SELECT id,nombre FROM pacientes WHERE id=?').get(hp[1]);
     if (!pa) return send(res, 404, { error: 'No existe ese paciente.' });
     return send(res, 200, { paciente: pa, citas: db.prepare(`SELECT ci.id,ci.inicio,ci.estado,ci.anticipo,ci.anticipo_monto,me.nombre medico,cl.nombre clinica FROM citas ci
-      JOIN medicos me ON me.id=ci.medico_id JOIN clinicas cl ON cl.id=ci.clinica_id WHERE ci.paciente_id=? ORDER BY ci.inicio DESC LIMIT 200`).all(pa.id),
-      reprogramaciones: db.prepare(`SELECT r.*, ma.nombre medico_anterior_nombre, ca.nombre clinica_anterior_nombre,
-        mn.nombre medico_nuevo_nombre, cn.nombre clinica_nuevo_nombre FROM reprogramaciones r
-        JOIN medicos ma ON ma.id=r.medico_anterior JOIN clinicas ca ON ca.id=r.clinica_anterior
-        JOIN medicos mn ON mn.id=r.medico_nuevo JOIN clinicas cn ON cn.id=r.clinica_nueva
-        JOIN citas ci ON ci.id=r.cita_id WHERE ci.paciente_id=? ORDER BY r.cuando DESC`).all(pa.id) });
+      JOIN medicos me ON me.id=ci.medico_id JOIN clinicas cl ON cl.id=ci.clinica_id WHERE ci.paciente_id=? ORDER BY ci.inicio DESC LIMIT 200`).all(pa.id) });
   }
   const ac = p.match(/^pacientes\/(\d+)\/acceso$/);
   if (ac && M === 'POST') {
@@ -113,39 +108,6 @@ async function api(req, res, url) {
       if (ya && ya.anticipo === 'pendiente')
         return send(res, 409, { error: `Esa hora está apartada por un paciente que aún no paga el anticipo. Si no paga en ${Ant.MINUTOS_PAGO} minutos se libera sola. Elija otra hora o intente más tarde.` });
       return send(res, 409, { error: 'Esa hora acaba de ser ocupada por otra persona. Elija otra hora.' });
-    }
-  }
-  const rp = p.match(/^citas\/(\d+)\/reprogramar$/);
-  if (rp && M === 'POST') {
-    if (u.rol === 'paciente') return send(res, 403, { error: 'La reprogramación debe hacerla el personal de la clínica.' });
-    const b = await leer(req); if (!b) return send(res, 400, { error: 'Datos ilegibles.' });
-    const cita = db.prepare("SELECT * FROM citas WHERE id=? AND estado='agendada'").get(rp[1]);
-    if (!cita) return send(res, 404, { error: 'No existe una cita activa con ese número.' });
-    const inicio = String(b.inicio || ''), medicoId = Number(b.medico_id), clinicaId = Number(b.clinica_id);
-    if (!V.fechaHoraValida(inicio) || !Number.isInteger(medicoId) || !Number.isInteger(clinicaId))
-      return send(res, 400, { error: 'Elija una fecha, hora, clínica y médico válidos.' });
-    if (inicio <= ahora()) return send(res, 400, { error: 'No se puede reprogramar a una fecha u hora pasada.' });
-    const clinica = db.prepare('SELECT * FROM clinicas WHERE id=?').get(clinicaId), medico = db.prepare('SELECT * FROM medicos WHERE id=? AND activo=1').get(medicoId);
-    if (!clinica || !medico) return send(res, 400, { error: 'La clínica o el médico ya no están disponibles.' });
-    if (!H.horas(clinica, medicoId, inicio.slice(0, 10)).includes(inicio.slice(11)))
-      return send(res, 400, { error: H.explicar(clinica, medico, inicio.slice(0, 10)) });
-    if (cita.inicio === inicio && cita.medico_id === medicoId && cita.clinica_id === clinicaId)
-      return send(res, 400, { error: 'La cita ya está en ese mismo horario.' });
-    try {
-      db.exec('BEGIN IMMEDIATE');
-      const cambio = db.prepare(`UPDATE citas SET inicio=?,medico_id=?,clinica_id=? WHERE id=? AND estado='agendada'`)
-        .run(inicio, medicoId, clinicaId, cita.id);
-      if (!cambio.changes) throw new Error('La cita dejó de estar disponible.');
-      db.prepare(`INSERT INTO reprogramaciones(cita_id,inicio_anterior,medico_anterior,clinica_anterior,inicio_nuevo,medico_nuevo,clinica_nueva,quien)
-        VALUES(?,?,?,?,?,?,?,?)`).run(cita.id, cita.inicio, cita.medico_id, cita.clinica_id, inicio, medicoId, clinicaId, u.nombre);
-      audit(u.nombre, 'reprogramar_cita', { id: cita.id, de: { inicio: cita.inicio, medico_id: cita.medico_id, clinica_id: cita.clinica_id }, a: { inicio, medico_id: medicoId, clinica_id: clinicaId } });
-      db.exec('COMMIT');
-      return send(res, 200, { ok: true, id: cita.id, inicio, medico_id: medicoId, clinica_id: clinicaId, anticipo: cita.anticipo });
-    } catch (err) {
-      try { db.exec('ROLLBACK'); } catch {}
-      if (String(err.message).includes('UNIQUE')) return send(res, 409, { error: 'Este horario acaba de ser reservado por otra persona. Por favor, selecciona otro horario disponible.' });
-      if (err.message === 'La cita dejó de estar disponible.') return send(res, 409, { error: err.message });
-      throw err;
     }
   }
   const m = p.match(/^citas\/(\d+)\/cancelar$/);

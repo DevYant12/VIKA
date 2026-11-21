@@ -77,7 +77,7 @@ async function main() {
   internet = true; w.dispatchEvent(new w.Event('online'));
   await esperar(() => JSON.parse(w.localStorage.getItem('vika_cola') || '[]')[0]?.estado === 'conflicto', 6000, 'conflicto detectado'); paso('el choque se detecta: la cita NO se pierde ni se da por confirmada');
   assert.match(q(w, '#pendientes').textContent, /necesita/); nav(w, 'pend'); await esperar(() => /ya fue tomada/.test(vista(w)) && qa(w, '#vista .hora').length >= 3, 3000, 'alternativas'); paso('muestra el motivo y horas alternativas para elegir');
-  clic(w, qa(w, '#vista .hora')[0]); await esperar(() => JSON.parse(w.localStorage.getItem('vika_cola') || '[]').length === 0, 6000, 'reprogramada'); await esperar(() => /No hay citas sin confirmar/.test(vista(w)), 3000); paso('al elegir otra hora se confirma y la cola queda vacía');
+  clic(w, qa(w, '#vista .hora')[0]); await esperar(() => JSON.parse(w.localStorage.getItem('vika_cola') || '[]').length === 0, 6000, 'hora alternativa elegida'); await esperar(() => /No hay citas sin confirmar/.test(vista(w)), 3000); paso('al elegir otra hora se confirma y la cola queda vacía');
 
   // ---------- 5. Ajustes de la doctora
   nav(w, 'ajustes'); await esperar(() => /Copias de seguridad/.test(vista(w)) && /Horarios/.test(vista(w)) && /Médicos/.test(vista(w)) && /Importar datos/.test(vista(w)), 5000, 'ajustes');

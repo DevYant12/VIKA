@@ -46,9 +46,9 @@ describe('cola de citas sin internet', () => {
     C.encolar(st, datos()); C.encolar(st, datos({ inicio: '2099-01-05T10:30' }));
     const r = await C.sincronizar(st, respuestas([{ status: 409, estado: 'conflicto_hora', error: 'x', alternativas: [] }, { status: 201, estado: 'creada', id: 5 }]).enviar);
     assert.equal(r.confirmadas.length, 1); assert.equal(C.leer(st).length, 1); assert.equal(C.leer(st)[0].estado, 'conflicto'); });
-  it('reprogramar: elige una alternativa y vuelve a pendiente; luego se confirma', async () => {
+  it('elegir hora: elige una alternativa y vuelve a pendiente; luego se confirma', async () => {
     const it = C.encolar(st, datos()); await C.sincronizar(st, respuestas([{ status: 409, estado: 'conflicto_hora', error: 'x', alternativas: ['2099-01-05T10:30'] }]).enviar);
-    C.reprogramar(st, it.cliente_id, '2099-01-05T10:30'); const p = C.leer(st)[0]; assert.equal(p.estado, 'pendiente'); assert.equal(p.inicio, '2099-01-05T10:30'); assert.equal(p.alternativas, null); assert.equal(p.cliente_id, it.cliente_id);
+    C.elegirHora(st, it.cliente_id, '2099-01-05T10:30'); const p = C.leer(st)[0]; assert.equal(p.estado, 'pendiente'); assert.equal(p.inicio, '2099-01-05T10:30'); assert.equal(p.alternativas, null); assert.equal(p.cliente_id, it.cliente_id);
     const r = await C.sincronizar(st, respuestas([{ status: 201, estado: 'creada', id: 8 }]).enviar); assert.equal(r.confirmadas.length, 1); });
   it('posible duplicado: pide decidir; "misma persona" o "otra" y reenvía', async () => {
     const it = C.encolar(st, datos({ paciente: { nombre: 'Niño Pérez', tipo_doc: 'sin_documento' } }));
@@ -68,5 +68,5 @@ describe('cola de citas sin internet', () => {
   it('las que tienen problema no se reenvían solas', async () => {
     C.encolar(st, datos()); await C.sincronizar(st, respuestas([{ status: 409, estado: 'conflicto_hora', error: 'x' }]).enviar);
     const { enviar, enviados } = respuestas([]); await C.sincronizar(st, enviar); assert.equal(enviados.length, 0); });
-  it('mutar un id que no existe no rompe nada', () => { assert.equal(C.reprogramar(st, 'noexiste', '2099-01-01T10:00'), null); C.descartar(st, 'noexiste'); });
+  it('mutar un id que no existe no rompe nada', () => { assert.equal(C.elegirHora(st, 'noexiste', '2099-01-01T10:00'), null); C.descartar(st, 'noexiste'); });
 });

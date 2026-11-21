@@ -48,7 +48,6 @@ function historialPaciente(p) {
     const lista = h('div');
     if (!r.citas.length) lista.append(h('p', { class: 'suave' }, 'Este paciente todavía no tiene citas registradas.'));
     (r.citas || []).forEach(c => lista.append(h('div', { class: 'fila' }, h('div', { class: c.estado === 'cancelada' ? 'cancelada' : '' }, h('strong', {}, c.inicio.replace('T', ' ')), h('div', { class: 'suave' }, `${c.medico} · ${c.clinica} · ${c.estado === 'cancelada' ? 'Cancelada' : 'Activa'}${ETQ[c.anticipo] ? ' · ' + ETQ[c.anticipo] : ''}`)))));
-    (r.reprogramaciones || []).forEach(x => lista.append(h('div', { class: 'nota' }, `Reprogramada por ${x.quien}: ${x.inicio_anterior.replace('T', ' ')} → ${x.inicio_nuevo.replace('T', ' ')}.`)));
     $('#vista').replaceChildren(h('section', {}, h('h2', {}, 'Historial de ' + p.nombre), h('p', { class: 'suave' }, 'Solo se muestran datos administrativos de citas y anticipos.'), lista, h('button', { class: 'sec', onclick: () => irA('buscar') }, 'Volver a buscar')));
   });
 }
@@ -138,30 +137,6 @@ function agendar() {
   cargarHoras();
 }
 
-async function reprogramarCita(c) {
-  const cl = h('select', {}, ...opciones(cat.clinicas, x => x.nombre)); cl.value = cat.clinicas.find(x => x.nombre === c.clinica)?.id || cat.clinicas[0]?.id;
-  const me = h('select', {}, ...opciones(cat.medicos, x => `${x.nombre} (${x.especialidad})`)); me.value = cat.medicos.find(x => x.nombre === c.medico)?.id || cat.medicos[0]?.id;
-  const fe = h('input', { type: 'date', min: hoy(), value: c.inicio.slice(0, 10) }), hs = h('div', { class: 'horas' }), info = h('p', { class: 'suave' });
-  let hora = c.inicio.slice(11, 16);
-  const cargar = async () => {
-    hs.replaceChildren(); hora = null;
-    const r = await api(`disponibilidad?clinica=${cl.value}&medico=${me.value}&fecha=${fe.value}`);
-    if (!r.ok) return hs.append(h('p', { class: 'err' }, r.error));
-    const esCitaActual = fe.value === c.inicio.slice(0, 10) && String(me.value) === String(cat.medicos.find(x => x.nombre === c.medico)?.id) && String(cl.value) === String(cat.clinicas.find(x => x.nombre === c.clinica)?.id);
-    r.forEach(x => hs.append(h('button', { class: 'hora' + (esCitaActual && x.hora === c.inicio.slice(11, 16) ? ' sel' : ''), disabled: !x.libre && !(esCitaActual && x.hora === c.inicio.slice(11, 16)), onclick: e => { hora = x.hora; hs.querySelectorAll('.hora').forEach(b => b.classList.remove('sel')); e.currentTarget.classList.add('sel'); } }, x.hora)));
-    info.textContent = 'Seleccione una hora libre. La cita actual no se pierde si cancela.';
-  };
-  [cl, me, fe].forEach(x => x.addEventListener('change', cargar));
-  const guardar = h('button', { onclick: async () => {
-    if (!hora) return aviso('Seleccione una hora disponible.');
-    if (!confirm(`¿Reprogramar la cita de ${c.paciente} para el ${fe.value} a las ${hora}?`)) return;
-    const r = await api(`citas/${c.id}/reprogramar`, { inicio: `${fe.value}T${hora}`, medico_id: +me.value, clinica_id: +cl.value });
-    aviso(r.ok ? 'Cita reprogramada. El anticipo y el historial se conservaron.' : r.error); if (r.ok) irA('citas');
-  } });
-  $('#vista').replaceChildren(h('section', {}, h('h2', {}, 'Reprogramar cita'), h('p', { class: 'suave' }, `${c.paciente} · cita actual: ${c.inicio.replace('T', ' ')}`), h('label', {}, 'Nueva clínica'), cl, h('label', {}, 'Nuevo médico'), me, h('label', {}, 'Nueva fecha'), fe, h('label', {}, 'Nueva hora'), hs, info, guardar, ' ', h('button', { class: 'sec', onclick: () => irA('citas') }, 'Volver')));
-  cargar();
-}
-
 /* ---------- Citas del día ---------- */
 async function citas() {
   const v = $('#vista'), fe = h('input', { type: 'date', value: hoy(), 'aria-label': 'Fecha' }), lista = h('div');
@@ -173,7 +148,7 @@ async function citas() {
     if (!r.length && !locales.length) return lista.append(h('p', { class: 'suave' }, 'No hay citas este día. Use "Agendar cita" para crear la primera.'));
     r.forEach(c => lista.append(h('div', { class: 'fila' },
       h('div', { class: c.estado === 'cancelada' ? 'cancelada' : '' }, h('strong', {}, c.inicio.slice(11) + ' · ' + c.paciente), h('div', { class: 'suave' }, `${c.medico} · ${c.clinica}${ETQ[c.anticipo] ? ' · ' + ETQ[c.anticipo] : ''}${c.origen === 'offline' ? ' · registrada sin internet' : ''}`)),
-      c.estado === 'agendada' ? h('div', {}, h('button', { class: 'sec', onclick: () => reprogramarCita(c) }, 'Reprogramar'), ' ', h('button', { class: 'peligro', onclick: async () => {
+      c.estado === 'agendada' ? h('div', {}, h('button', { class: 'peligro', onclick: async () => {
         if (!quien()) return aviso('Escriba su nombre arriba, en "Usted es".');
         if (!confirm(`¿Cancelar la cita de ${c.paciente} a las ${c.inicio.slice(11)}?`)) return;
         const x = await api(`citas/${c.id}/cancelar`, { quien: quien() }); aviso(x.ok ? (x.aviso || 'Cita cancelada. La hora quedó libre.') : x.error); cargar();
@@ -233,7 +208,7 @@ function pendientes() {
     const caja = h('section', {}, cab);
     if (i.estado === 'pendiente') caja.append(h('div', { class: 'nota' }, '⏳ Esperando conexión. Todavía NO está confirmada.'), descartar);
     else if (i.estado === 'conflicto') caja.append(h('div', { class: 'nota mal' }, i.mensaje), h('p', { class: 'suave' }, 'Elija otra hora para este paciente:'),
-      h('div', { class: 'horas' }, ...(i.alternativas || []).map(a => h('button', { class: 'hora', onclick: () => { Cola.reprogramar(store, i.cliente_id, a); tras(); } }, etiquetaHora(a)))), h('p'), descartar);
+      h('div', { class: 'horas' }, ...(i.alternativas || []).map(a => h('button', { class: 'hora', onclick: () => { Cola.elegirHora(store, i.cliente_id, a); tras(); } }, etiquetaHora(a)))), h('p'), descartar);
     else if (i.estado === 'revisar') caja.append(h('div', { class: 'nota mal' }, i.mensaje), ...(i.existentes || []).map(e => h('p', {}, h('button', { class: 'sec', onclick: () => { Cola.decidir(store, i.cliente_id, { paciente_id: e.id }); tras(); } }, `Es la misma persona: ${e.nombre}${e.nacimiento ? ' (' + e.nacimiento + ')' : ''}`))),
       h('p', {}, h('button', { class: 'sec', onclick: () => { Cola.decidir(store, i.cliente_id, {}); tras(); } }, 'Es otra persona (crear nuevo paciente)')), descartar);
     else caja.append(h('div', { class: 'nota mal' }, i.mensaje || 'No se pudo confirmar.'), h('button', { class: 'sec', onclick: () => { Cola.reintentar(store, i.cliente_id); tras(); } }, 'Reintentar'), ' ', descartar);
@@ -319,8 +294,7 @@ $('#ayuda').addEventListener('click', () => {
     '1. Para agendar, toque «Agendar cita», busque o registre al paciente y elija una hora que no esté tachada.',
     '2. Para consultar la agenda, toque «Citas del día» y cambie la fecha si necesita revisar otro día.',
     '3. Para cancelar, busque la cita y confirme. La cita no se borra: queda registrada y puede reactivarse si la hora sigue libre.',
-    '4. Para corregir una fecha u hora, use «Reprogramar» en la cita. Vika comprueba la disponibilidad antes de guardar.',
-    '5. Si necesita revisar a una persona, toque «Buscar paciente» y luego «Ver historial».'
+    '4. Si necesita revisar a una persona, toque «Buscar paciente» y luego «Ver historial».'
   ];
   $('#vista').replaceChildren(h('section', {}, h('h2', {}, 'Ayuda para esta pantalla'), h('p', { class: 'suave' }, 'Instrucciones rápidas, sin necesidad de Internet.'), h('ol', {}, ...pasos.map(x => h('li', {}, x))), h('button', { class: 'sec', onclick: () => irA(yo.rol === 'paciente' ? 'agendar' : 'inicio') }, 'Volver')));
 });
