@@ -64,4 +64,4 @@ Mientras no hay conexión, el personal puede **seguir agendando**: las citas que
 | `VIKA_BACKUPS` | Carpeta de copias locales | `backups` |
 | `VIKA_BACKUP_EXTRA` | Carpeta de copias externas | — |
 | `VIKA_BACKUP_CLAVE` | Frase para cifrar la copia externa | — |
-| `VIKA_ANTICIPO`, `VIKA_MINUTOS_PAGO`, `VIKA_HORAS_REEMBOLSO` | Anticipo | 5 · 15 · 0 |
+| `VIKA_ANTICIPO`, `VIKA_MINUTOS_PAGO`, `VIKA_HORAS_REEMBOLSO` | Anticipo | 10 · 15 · 0 |

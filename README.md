@@ -7,7 +7,7 @@ Requisito: **Node.js 22.5 o superior** (no hay que instalar nada más).
 ```bash
 npm start
 ```
-Al arrancar, la terminal muestra el **PIN inicial** de la Dra. Paredes. Abra http://localhost:3000, elija su nombre y escriba el PIN. Después, desde la pestaña **Equipo**, cree a las recepcionistas. Registre un paciente (cédula de prueba válida: `1710034065`) y luego agende una cita.
+Al arrancar, la terminal muestra `Vika lista en http://127.0.0.1:3000` y el **PIN inicial** de la Dra. Paredes. Abra http://127.0.0.1:3000, elija su nombre y escriba el PIN. Después, desde la pestaña **Equipo**, cree a las recepcionistas. Registre un paciente (cédula de prueba válida: `1710034065`) y luego agende una cita.
 
 **Con datos de prueba (2 minutos más):** entre como la doctora → **Ajustes → Importar** y cargue, en este orden y usando primero *Revisar sin guardar*, los archivos de `datos-ejemplo/`: `medicos.csv`, `pacientes.csv`, `horarios.csv`, `citas-pasadas.csv`. Son datos inventados y sucios a propósito; el sistema muestra qué importa y qué rechaza (y por qué).
 
@@ -47,6 +47,6 @@ En el primer ingreso, los pacientes distinguen **Soy paciente nuevo · Crear cue
 Las clínicas usan la hora de Ecuador continental (`America/Guayaquil`, sin cambio de hora) **sin importar la zona del computador**. Para Galápagos: `VIKA_TZ=Pacific/Galapagos`.
 
 ## Historial del repositorio
-Este repositorio **empezó con una versión del sistema que ya existía**, importada en el primer commit; por eso el historial anterior no está. La rama `subida-para-prueba-con-persona` conserva la historia real enlazada a GitHub, con commits fechados el 17, 19 y 20 de noviembre y autorías de `Royant` y `DevYant12`. Durante el cierre me equivoqué al trabajar temporalmente en una copia local `main` de respaldo sin revisar rama/upstream y dejé cambios sin commit; al principio confundí el historial de esa copia con el del repositorio remoto. Fue un error por no saber usar Git con suficiente cuidado. No se reescribieron ni inventaron fechas o autores; para la entrega se usa la rama enlazada al remoto y se agrega un commit real con los cambios de cierre.
+Vika la empecé yo; al crear el repositorio subí una base inicial del proyecto que ya venía desarrollando. Por eso el historial de Git comienza con esa primera carga y no refleja el trabajo previo que hice antes de subirlo; **no partí de un sistema ajeno ya terminado**. La rama `subida-para-prueba-con-persona` conserva la historia enlazada a GitHub, con commits fechados el 17, 19 y 20 de noviembre y autorías de `Royant` y `DevYant12`. Durante el cierre me equivoqué al trabajar temporalmente en una copia local `main` de respaldo sin revisar rama/upstream y dejé cambios sin commit; al principio confundí el historial de esa copia con el del repositorio remoto. Fue un error por no saber usar Git con suficiente cuidado. No se reescribieron ni inventaron fechas o autores.
 
-**Cierre:** después de revisar el estado limpio y las pruebas, la etiqueta `entrega-final` debe apuntar al commit de cierre de `subida-para-prueba-con-persona`. La etiqueta es la versión que se entrega; no reescribir el historial ni crear commits posteriores que cambien lo presentado.
+**Entrega:** `main` es la rama predeterminada que aparece al abrir el repositorio y contiene la versión final. La etiqueta `entrega-final` identifica ese mismo estado. Si se hacen cambios posteriores, se registran en commits nuevos y no se falsifica el historial.
