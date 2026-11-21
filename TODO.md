@@ -13,8 +13,8 @@
 
 ## Validación
 
-- [ ] Ejecutar `npm test`.
-- [ ] Ejecutar `npm run test:ui`.
+- [x] Ejecutar `npm test` (202 pruebas aprobadas en esta rama).
+- [x] Ejecutar `npm run test:ui` (27 comprobaciones aprobadas en esta rama).
 - [ ] Revisar que el modo sin conexión conserve el aviso `SIN CONFIRMAR`.
 - [ ] Revisar con `prefers-reduced-motion: reduce`.
 - [ ] Hacer una prueba manual con una persona no técnica y registrar el resultado en `docs/PRUEBA-USUARIO.md`.
@@ -25,4 +25,4 @@
 - [ ] Sustituir el pago simulado por un proveedor real con webhook.
 - [ ] Evaluar segundo factor de autenticación.
 - [ ] Diseñar recordatorios y lista de espera.
-- [ ] Crear `entrega-final` solo cuando el proyecto esté cerrado y revisado.
+- [ ] Realizar la prueba con una persona no técnica y registrar el resultado en `docs/PRUEBA-USUARIO.md` antes de considerar cualquier cierre.

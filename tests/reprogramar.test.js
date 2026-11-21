@@ -38,6 +38,16 @@ describe('reprogramación segura', () => {
     assert.ok(h.j.citas.some(x => x.id === c.j.id && x.inicio === original));
   });
 
+  it('rechaza una fecha imposible y no altera la cita original', async () => {
+    const original = fecha(7, '13:00');
+    const c = await S.llamar('citas', { paciente_id: paciente, medico_id: 1, clinica_id: 1, inicio: original }, ck);
+    assert.equal(c.status, 201);
+    const r = await S.llamar('citas/' + c.j.id + '/reprogramar', { inicio: '2026-02-30T09:00', medico_id: 1, clinica_id: 1 }, ck);
+    assert.equal(r.status, 400);
+    const h = await S.llamar('pacientes/' + paciente + '/citas', null, ck);
+    assert.ok(h.j.citas.some(x => x.id === c.j.id && x.inicio === original));
+  });
+
   it('rechaza fechas pasadas y conserva el anticipo indicado', async () => {
     const c = await S.llamar('citas', { paciente_id: paciente, medico_id: 1, clinica_id: 1, inicio: fecha(7, '13:00') }, ck);
     const r = await S.llamar(`citas/${c.j.id}/reprogramar`, { inicio: '2020-01-01T09:00', medico_id: 1, clinica_id: 1 }, ck);

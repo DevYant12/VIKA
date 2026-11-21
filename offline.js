@@ -29,7 +29,7 @@ function sincronizar(b, u, { ahora, audit }) {
   const n = k => Number.isInteger(Number(b[k])) && b[k] !== null && b[k] !== '' ? Number(b[k]) : 0;
   const clin = db.prepare('SELECT * FROM clinicas WHERE id=?').get(n('clinica_id')), med = db.prepare('SELECT * FROM medicos WHERE id=? AND activo=1').get(n('medico_id'));
   if (!clin || !med) return ok(400, { estado: 'dato_invalido', error: 'La clínica o el médico ya no existen. Descarte esta cita y agéndela de nuevo.' });
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(b.inicio || '')) return ok(400, { estado: 'dato_invalido', error: 'Fecha u hora no válida.' });
+  if (!V.fechaHoraValida(b.inicio)) return ok(400, { estado: 'dato_invalido', error: 'Fecha u hora no válida.' });
   if (b.inicio <= ahora()) return ok(400, { estado: 'hora_pasada', error: 'Esa hora ya pasó antes de poder confirmarla. Hay que agendar al paciente en otra hora y avisarle.' });
   if (!H.horas(clin, med.id, b.inicio.slice(0, 10)).includes(b.inicio.slice(11))) return ok(400, { estado: 'fuera_de_horario', error: H.explicar(clin, med, b.inicio.slice(0, 10)) });
 

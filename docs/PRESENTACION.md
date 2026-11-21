@@ -20,4 +20,4 @@
 - **¿Qué pasa si se borra todo?** Copias cada 6 h, verificadas; copia externa cifrada opcional; `npm run restaurar`. Límite: alguien debe configurarla y probarla.
 - **¿Y si el sistema se cae el lunes a las 8?** Citas del día impresas + restaurar la última copia en otro computador. No hay servidor de reserva.
 - **¿Es legal el anticipo no reembolsable?** No lo sabemos; no somos abogados. Dejamos devolución por emergencia/cancelación de la clínica y una ventana configurable.
-- **¿Qué hizo la IA y qué hice yo?** DECISIONES §12. Soy el único integrante: debo poder explicar el código, las decisiones y cada commit que aparece con mi autor. La IA fue una herramienta de apoyo, no un sustituto de la revisión.
+- **¿Qué hizo la IA y qué hicieron ustedes?** DECISIONES §12. **Cada integrante debe poder explicar su parte y sus commits.**
